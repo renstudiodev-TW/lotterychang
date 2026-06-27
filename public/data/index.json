@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-06-27T18:39:39.124Z",
+  "games": [
+    {
+      "game": "daily539",
+      "name": "今彩539",
+      "totalDraws": 1724,
+      "latest": "2026-06-27"
+    },
+    {
+      "game": "lotto649",
+      "name": "大樂透",
+      "totalDraws": 757,
+      "latest": "2026-06-26"
+    },
+    {
+      "game": "superLotto638",
+      "name": "威力彩",
+      "totalDraws": 677,
+      "latest": "2026-06-25"
+    }
+  ]
+}
