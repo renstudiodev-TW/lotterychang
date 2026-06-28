@@ -21,6 +21,8 @@ export default function MemberPage() {
   const [me, setMe] = useState<Me | null>(null);
   const [loading, setLoading] = useState(true);
   const [pushBusy, setPushBusy] = useState(false);
+  const [testMsg, setTestMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [testBusy, setTestBusy] = useState(false);
 
   useEffect(() => {
     fetch("/api/me", { credentials: "same-origin" })
@@ -44,6 +46,25 @@ export default function MemberPage() {
       if (r.ok) setMe({ ...me, pushEnabled: next });
     } finally {
       setPushBusy(false);
+    }
+  }
+
+  async function sendTest() {
+    if (testBusy) return;
+    setTestBusy(true);
+    setTestMsg(null);
+    try {
+      const r = await fetch("/api/me/push/test", { method: "POST", credentials: "same-origin" });
+      const d = await r.json().catch(() => ({}));
+      setTestMsg(
+        r.ok
+          ? { ok: true, text: "已送出！請到 LINE 查看 808888 官方帳號的訊息。" }
+          : { ok: false, text: d.error || "發送失敗，請稍後再試。" }
+      );
+    } catch {
+      setTestMsg({ ok: false, text: "網路錯誤，請稍後再試。" });
+    } finally {
+      setTestBusy(false);
     }
   }
 
@@ -128,6 +149,23 @@ export default function MemberPage() {
               }`}
             />
           </button>
+        </div>
+        <div className="mt-4 border-t border-[var(--border)] pt-4">
+          <button
+            onClick={sendTest}
+            disabled={testBusy}
+            className="btn-ghost !px-4 !py-2 text-sm disabled:opacity-60"
+          >
+            {testBusy ? "發送中…" : "傳一則測試推播給我"}
+          </button>
+          {testMsg && (
+            <p className={`mt-2 text-[13px] ${testMsg.ok ? "text-[var(--cold)]" : "text-[var(--hot)]"}`}>
+              {testMsg.text}
+            </p>
+          )}
+          <p className="mt-2 text-[12px] text-[var(--muted)]">
+            收不到？請先把官方帳號 <span className="text-[var(--neon)]">@808888.tw</span> 加為好友再試。
+          </p>
         </div>
       </div>
 

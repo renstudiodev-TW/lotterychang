@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 import { requireMember, issueSession, clearSession } from "../auth.js";
-import { getLoginUrl, exchangeCode } from "../integrations/line.js";
+import { getLoginUrl, exchangeCode, pushMessage } from "../integrations/line.js";
 import { usersRepo, subsRepo, pushRepo } from "../repos.js";
 import { lineConfigured } from "../config.js";
 import { loadFull } from "../reports.js";
@@ -105,4 +105,23 @@ member.post("/api/me/push", requireMember, async (c) => {
   const enabled = String((body as Record<string, unknown>).enabled ?? "true") !== "false";
   await pushRepo.upsert(user.id, user.line_user_id, enabled);
   return c.json({ ok: true, enabled });
+});
+
+// 傳一則測試推播給自己（驗證整條 LINE 推播鏈是否打通）。
+member.post("/api/me/push/test", requireMember, async (c) => {
+  const s = c.get("session") as { sub: string };
+  const user = await usersRepo.byId(s.sub);
+  if (!user?.line_user_id) return c.json({ ok: false, error: "無 LINE 綁定" }, 400);
+  const res = await pushMessage(user.line_user_id, [
+    {
+      type: "text",
+      text: "🔮 808888 測試推播\n你已成功開通 LINE 報牌推播！開獎前老師傅會把當日精選號送到這裡。\n\n⚠️ 樂透為獨立隨機事件，僅供參考娛樂，不保證中獎。",
+    },
+  ]);
+  if (res.stub) return c.json({ ok: false, error: "推播未設定（缺 access token）" }, 503);
+  if (!res.ok) {
+    // 最常見：用戶尚未加 808888 官方帳號好友 → LINE 拒收
+    return c.json({ ok: false, error: `LINE 拒收（status ${res.status}）。請先把 @808888.tw 加為好友。` }, 502);
+  }
+  return c.json({ ok: true });
 });
