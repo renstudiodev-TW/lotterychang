@@ -55,6 +55,15 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
                 </>
               )}
             </div>
+            {/* 顏色圖例 */}
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--muted)]">
+              <span className="flex items-center gap-1"><i className="inline-block h-2.5 w-2.5 rounded-full bg-[var(--hot)]" />熱號</span>
+              <span className="flex items-center gap-1"><i className="inline-block h-2.5 w-2.5 rounded-full bg-[var(--cold)]" />冷號</span>
+              <span className="flex items-center gap-1"><i className="inline-block h-2.5 w-2.5 rounded-full border border-[var(--border)] bg-[var(--surface-2)]" />普通</span>
+              {latest.special != null && (
+                <span className="flex items-center gap-1"><i className="inline-block h-2.5 w-2.5 rounded-full bg-[var(--primary)]" />特別號</span>
+              )}
+            </div>
           </div>
         )}
       </div>
