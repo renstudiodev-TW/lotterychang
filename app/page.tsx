@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CodeRain } from "@/components/CodeRain";
 import { loadGame, loadIndex } from "@/lib/data";
 import { LockedPicks } from "@/components/LockedPicks";
 import { FreePicks } from "@/components/FreePicks";
@@ -15,8 +16,10 @@ export default async function Home() {
   return (
     <div className="mx-auto max-w-6xl px-5">
       {/* Hero */}
-      <section className="relative py-16 text-center sm:py-24">
-        <div className="glow-wrap mx-auto max-w-3xl">
+      <section className="relative overflow-hidden py-16 text-center sm:py-24">
+        {/* 駭客任務代碼雨背景（財神爺圖之後疊在此之上） */}
+        <CodeRain className="[mask-image:radial-gradient(ellipse_60%_70%_at_50%_45%,transparent_30%,black_100%)]" />
+        <div className="relative z-10 glow-wrap mx-auto max-w-3xl">
           <span className="tag mx-auto mb-5 inline-flex border-[rgba(0,240,255,0.35)] text-[var(--neon)]">
             ✦ AI 統計 × 台灣民間抓牌術
           </span>
