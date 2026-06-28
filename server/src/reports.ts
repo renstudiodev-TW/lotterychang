@@ -7,9 +7,6 @@ import { pushMessage } from "./integrations/line.js";
 import { pushRepo, subsRepo, deliveriesRepo, usersRepo } from "./repos.js";
 import { tierMeets } from "./plans.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const FULL_DIR = path.resolve(__dirname, "..", "..", "data", "full");
-
 interface FullBundle {
   name: string;
   pick: number;
@@ -17,10 +14,24 @@ interface FullBundle {
   score: Array<{ n: number; score: number }>;
 }
 
+// 完整分析資料夾位置。本地 Node 由 import.meta.url 推算；Workers 無此值 → 回 null。
+function fullDir(): string | null {
+  try {
+    const url = import.meta.url;
+    if (!url) return null;
+    const dir = path.dirname(fileURLToPath(url));
+    return path.resolve(dir, "..", "..", "data", "full");
+  } catch {
+    return null;
+  }
+}
+
 export function loadFull(game: string): FullBundle | null {
   // 本地由檔案系統讀；Workers 無 fs（Phase C 改由 KV/R2 提供）→ 優雅回 null。
   try {
-    const f = path.join(FULL_DIR, `${game}.json`);
+    const dir = fullDir();
+    if (!dir) return null;
+    const f = path.join(dir, `${game}.json`);
     if (!existsSync(f)) return null;
     return JSON.parse(readFileSync(f, "utf8")) as FullBundle;
   } catch {
