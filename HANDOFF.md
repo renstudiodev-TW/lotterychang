@@ -41,5 +41,34 @@ npm run data       # 重抓開獎+重算分析（539/大樂透/威力彩）
 npm run build      # 靜態輸出到 out/
 ```
 
-## Phase 2 待辦（會員/訂閱/推播）
-LINE Login 登入 → 綠界定期定額金流 → Cloudflare D1 存會員/訂閱 → Cron 每日報牌 → LINE Messaging API 推播（注意每月免費 200 則，超過付費）。架構已在 memory/decisions 記錄。
+## Phase 2 後端：後台會員管理系統（已完成本地版，在 `server/`）
+
+獨立 Hono 後端，本地用 node:sqlite，正式環境共用同一套碼上 Cloudflare Workers + D1。
+
+**怎麼跑（本地）：**
+```bash
+cd server
+npm install
+npm run seed     # 建表 + 塞 10 筆測試會員
+npm run start    # http://localhost:8787  後台在 /admin
+```
+後台預設帳密 `admin` / `changeme-dev-only`（在 `server/.env` 覆蓋，範本見 `.env.example`）。
+
+**已做：**
+- 後台介面（神秘科技風）：登入、儀表板統計、會員列表(搜尋/篩選)、會員詳情(改等級/狀態/延長天數/停權)、稽核日誌、報牌紀錄、手動觸發報牌
+- 會員資料模型：users / subscriptions / push_targets / pick_deliveries / admin_audit / plans
+- 會員 API：`/api/me`、`/api/me/picks`（**tier≥pro 才回完整高機率號**，付費牆閉環）、推播開關
+- LINE Login OAuth 流程 + 開發用 `/auth/dev-login`
+- 整合骨架：LINE 推播、綠界定期定額（CheckMacValue 已實作），未設憑證時走 stub
+- 報牌服務：讀 `data/full` 完整分析 → 依訂閱資格推播 → 記錄
+
+**還要你給憑證才能通的（都在 `server/.env`）：**
+1. LINE Login 頻道（LINE_CHANNEL_ID/SECRET）→ 真實 LINE 登入
+2. LINE 官方帳號 Messaging token → 真實報牌推播
+3. 綠界 ECPay 商家金鑰（用公司統編申請）→ 真實金流
+
+**還沒接線的：**
+- `server/src/worker.ts` 是 Cloudflare Workers 入口骨架，repos 要從「模組級 node:sqlite」改成「per-request 注入 D1（async）」才能上 Workers，檔頭有註解。今晚先讓本地完整可跑。
+- 前台（Next 靜態站）與後端會員區尚未串接（登入後導向、會員儀表板頁），下一步做。
+
+架構決策都在 memory/decisions 記錄。
