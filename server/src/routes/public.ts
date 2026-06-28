@@ -101,17 +101,35 @@ function decodeEntities(s: string): string {
     .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
 }
 
-function parseRss(xml: string, max = 10) {
+// 還原真正文章網址：Bing 用 apiclick.aspx?...&url=<encoded> 包裝轉址，抽出 url 參數即原文。
+function cleanLink(raw: string): string {
+  let link = raw.replace(/&amp;/g, "&").trim();
+  const m = link.match(/[?&]url=([^&]+)/i);
+  if (m) {
+    try {
+      const u = decodeURIComponent(m[1]);
+      if (/^https?:\/\//i.test(u)) return u;
+    } catch {
+      /* fallthrough */
+    }
+  }
+  return link;
+}
+
+function parseRss(xml: string, max = 12) {
   const items: Array<{ title: string; link: string; date: string; source: string }> = [];
   const blocks = xml.split(/<item>/i).slice(1);
   for (const b of blocks.slice(0, max)) {
     const title = decodeEntities((b.match(/<title>([\s\S]*?)<\/title>/i)?.[1] ?? "").trim());
     let link = (b.match(/<link>([\s\S]*?)<\/link>/i)?.[1] ?? "").trim();
     if (!link) link = (b.match(/<link[^>]*href="([^"]+)"/i)?.[1] ?? "").trim();
+    link = cleanLink(link);
     const date = (b.match(/<pubDate>([\s\S]*?)<\/pubDate>/i)?.[1] ?? "").trim();
     const source = decodeEntities((b.match(/<source[^>]*>([\s\S]*?)<\/source>/i)?.[1] ?? "").trim());
-    if (title && link) items.push({ title, link, date, source });
+    if (title && /^https?:\/\//i.test(link)) items.push({ title, link, date, source });
   }
+  // 依日期新到舊排序
+  items.sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0));
   return items;
 }
 
