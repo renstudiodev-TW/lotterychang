@@ -146,7 +146,15 @@ publicApi.get("/api/news", async (c) => {
       const res = await cachedFetch(url, 1800);
       if (!res.ok) { lastErr = `${new URL(url).host} ${res.status}`; continue; }
       const items = parseRss(await res.text());
-      if (items.length) return c.json({ news: items });
+      if (items.length) {
+        // 只留近 14 天；若過濾後太少(<4)則放寬回全部，避免空白。
+        const cutoff = Date.now() - 14 * 86400 * 1000;
+        const fresh = items.filter((n) => {
+          const t = Date.parse(n.date);
+          return Number.isNaN(t) || t >= cutoff;
+        });
+        return c.json({ news: (fresh.length >= 4 ? fresh : items).slice(0, 8) });
+      }
       lastErr = `${new URL(url).host} empty`;
     } catch (e) {
       lastErr = (e as Error).message;
