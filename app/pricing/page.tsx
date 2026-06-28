@@ -5,7 +5,7 @@ import { SubscribeButton } from "@/components/SubscribeButton";
 export const metadata: Metadata = {
   title: "訂閱方案 · 進階 AI 報牌與拖牌版路｜808888.tw",
   description:
-    "808888 訂閱方案：免費看完整冷熱、遺漏、尾數統計；進階解鎖 AI 高機率精選號、拖牌版路、每日 LINE 報牌推播。以藍新金流定期定額扣款，可隨時取消。",
+    "808888 訂閱方案：免費看完整冷熱、遺漏、尾數統計；進階解鎖 AI 高評分精選號、拖牌版路、每日 LINE 報牌推播。以藍新金流定期定額扣款，可隨時取消。",
   alternates: { canonical: "/pricing/" },
 };
 
@@ -31,8 +31,8 @@ const TIERS: Tier[] = [
     features: [
       { text: "冷熱號 / 遺漏值 / 尾數 / 區間", on: true },
       { text: "生肖球 / 和值 / AC / 奇偶型態", on: true },
-      { text: "每日免費參考報牌（中機率號）", on: true },
-      { text: "AI 高機率精選（只看分數＋問號）", on: true },
+      { text: "每日免費參考報牌（中評分號）", on: true },
+      { text: "AI 高評分精選（只看分數＋問號）", on: true },
       { text: "完整 AI 精選號碼", on: false },
       { text: "拖牌 / 版路分析", on: false },
       { text: "每日 LINE 報牌推播", on: false },
@@ -49,7 +49,7 @@ const TIERS: Tier[] = [
     cta: "訂閱進階",
     features: [
       { text: "免費會員全部功能", on: true },
-      { text: "每日 AI 高機率精選完整號碼", on: true },
+      { text: "每日 AI 高評分精選完整號碼", on: true },
       { text: "拖牌 / 版路共現分析", on: true },
       { text: "AI 綜合評分組成明細", on: true },
       { text: "每日 LINE 報牌推播", on: true },
@@ -86,7 +86,7 @@ export default function PricingPage() {
       </div>
       <h1 className="text-center font-display text-4xl font-bold text-gradient">選擇你的抓牌等級</h1>
       <p className="mx-auto mt-4 mb-3 max-w-xl text-center text-[var(--muted)]">
-        免費版就能看完整冷熱遺漏統計；訂閱解鎖 AI 高機率精選號、拖牌版路、每日 LINE 報牌與交叉選牌。
+        免費版就能看完整冷熱遺漏統計；訂閱解鎖 AI 高評分精選號、拖牌版路、每日 LINE 報牌與交叉選牌。
       </p>
       <p className="mx-auto mb-10 max-w-xl text-center text-[12px] text-[var(--hot)]">
         ※ 以下方案與定價為草案，功能分級與價格將與你討論後調整。

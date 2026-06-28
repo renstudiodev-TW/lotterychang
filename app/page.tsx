@@ -129,7 +129,7 @@ export default async function Home() {
           {[
             { n: "1", t: "抓官方開獎", d: "每日自動同步台灣彩券公開開獎結果，建立完整歷史資料庫。" },
             { n: "2", t: "多技巧演算", d: "冷熱、遺漏、尾數、拖牌、生肖、型態等十多項指標同步計算。" },
-            { n: "3", t: "AI 綜合評分", d: "多指標加權整合成單一分數排名，每日報牌、高機率精選解鎖。" },
+            { n: "3", t: "AI 綜合評分", d: "多指標加權整合成單一分數排名，每日報牌、高評分精選解鎖。" },
           ].map((s) => (
             <div key={s.n} className="glass p-5">
               <div className="num mb-2 text-2xl font-bold text-[var(--primary)]">0{s.n}</div>

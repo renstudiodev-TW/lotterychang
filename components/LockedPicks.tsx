@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { LockedTeaser } from "@/lib/lottery/publicize";
 
-/** 付費鎖定的高機率 AI 牌：露出大大的機率分數 + 問號，吸引解鎖 */
+/** 付費鎖定的高評分 AI 牌：露出大大的評分數字 + 問號，吸引解鎖 */
 export function LockedPicks({ picks, gameName }: { picks: LockedTeaser[]; gameName: string }) {
   return (
     <div className="glow-wrap glass relative overflow-hidden p-5 sm:p-6">
@@ -10,7 +10,7 @@ export function LockedPicks({ picks, gameName }: { picks: LockedTeaser[]; gameNa
         <span className="tag">AI 綜合評分</span>
       </div>
       <h3 className="font-display text-lg font-bold text-[var(--text)]">
-        本期 {gameName} AI 高機率精選 <span className="num text-[var(--hot)]">{picks.length}</span> 碼
+        本期 {gameName} AI 高評分精選 <span className="num text-[var(--hot)]">{picks.length}</span> 碼
       </h3>
       <p className="mt-1 mb-5 text-sm text-[var(--muted)]">
         多種抓牌技巧交叉演算後的最高分號碼。免費版只顯示分數，號碼需訂閱解鎖。
@@ -35,7 +35,7 @@ export function LockedPicks({ picks, gameName }: { picks: LockedTeaser[]; gameNa
             >
               ?
             </span>
-            {/* 大大的機率數字 + 脈衝 */}
+            {/* 大大的評分數字 + 脈衝 */}
             <span className="num pulse-prob text-2xl font-bold text-[var(--hot)]">{p.score.toFixed(1)}</span>
             <span className="text-[10px] text-[var(--muted)]">綜合分數</span>
           </div>

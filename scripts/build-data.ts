@@ -91,7 +91,7 @@ async function run() {
 
     const bundle = analyze(merged, g, { generatedAt });
     await writeFile(path.join(FULL_DIR, `${id}.json`), JSON.stringify(bundle), "utf8");
-    // 前端只拿遮罩過的公開版 (高機率號碼不外送)
+    // 前端只拿遮罩過的公開版 (高評分號碼不外送)
     const pub = publicize(bundle);
     await writeFile(path.join(OUT_DIR, `${id}.json`), JSON.stringify(pub), "utf8");
 

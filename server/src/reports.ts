@@ -1,4 +1,4 @@
-// 每日報牌：讀完整分析 (data/full，含未遮罩的高機率號) → 推播給有效訂閱會員。
+// 每日報牌：讀完整分析 (data/full，含未遮罩的高評分號) → 推播給有效訂閱會員。
 // 由後台手動觸發 (測試) 或正式環境的 Cloudflare Cron 觸發。
 import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
@@ -39,7 +39,7 @@ export function loadFull(game: string): FullBundle | null {
   }
 }
 
-/** 產生某彩種的報牌文字 (含高機率精選號，僅付費會員可收) */
+/** 產生某彩種的報牌文字 (含高評分精選號，僅付費會員可收) */
 export function buildReportText(game: string): string | null {
   const b = loadFull(game);
   if (!b || !b.latest) return null;
@@ -48,7 +48,7 @@ export function buildReportText(game: string): string | null {
     `🔮 808888 ${b.name} 每日報牌`,
     `期別參考：${b.latest.period}（${b.latest.date}）`,
     ``,
-    `AI 高機率精選 ${b.pick} 碼：`,
+    `AI 高評分精選 ${b.pick} 碼：`,
     `${top.join("、")}`,
     ``,
     `⚠️ 樂透為獨立隨機事件，僅供參考娛樂，不保證中獎。`,

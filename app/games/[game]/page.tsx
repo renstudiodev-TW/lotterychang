@@ -88,7 +88,7 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
         )}
       </div>
 
-      {/* 每日報牌：鎖定高機率 + 免費參考 */}
+      {/* 每日報牌：鎖定高評分 + 免費參考 */}
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
         <LockedPicks picks={d.lockedPicks} gameName={d.name} />
         <FreePicks picks={d.freePicks} gameName={d.name} />
@@ -189,7 +189,7 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
         <LockedModule
           title="每日 LINE 報牌推播"
           tier="進階會員"
-          desc="每天開獎前自動把 AI 高機率精選號推到你的 LINE，不必每天上站。"
+          desc="每天開獎前自動把 AI 高評分精選號推到你的 LINE，不必每天上站。"
         />
       </div>
 

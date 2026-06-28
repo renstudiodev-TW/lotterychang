@@ -1,6 +1,6 @@
 import { NumberBall } from "./NumberBall";
 
-/** 每日免費報牌：中機率參考號 (號碼露出) */
+/** 每日免費報牌：中評分參考號 (號碼露出) */
 export function FreePicks({
   picks,
   gameName,
@@ -16,7 +16,7 @@ export function FreePicks({
       </div>
       <h3 className="font-display text-lg font-bold text-[var(--text)]">本期 {gameName} 參考號</h3>
       <p className="mt-1 mb-5 text-sm text-[var(--muted)]">
-        綜合評分中段的參考號碼，免費提供。高機率精選請見上方解鎖。
+        綜合評分中段的參考號碼，免費提供。高評分精選請見上方解鎖。
       </p>
       <div className="flex flex-wrap items-start gap-4">
         {picks.map((p) => (
