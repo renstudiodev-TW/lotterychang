@@ -10,6 +10,8 @@ import { LockedModule } from "@/components/LockedModule";
 import {
   HotColdChart, OmissionChart, TailChart, ZoneChart, ZodiacChart, SumChart, ACChart,
 } from "@/components/charts";
+import { SumTrendChart } from "@/components/SumTrendChart";
+import { ConsecutiveStats } from "@/components/ConsecutiveStats";
 
 export function generateStaticParams() {
   return SHIPPING_GAMES.map((game) => ({ game }));
@@ -133,6 +135,16 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
               </div>
             ))}
           </div>
+        </Section>
+
+        {/* 和值走勢（均值回歸） */}
+        <Section title="和值走勢 · 均值回歸" tag="標準差帶" subtitle="近期每期和值的走勢與 ±1σ／±2σ 波動帶，看本期是否落在統計極端。">
+          <SumTrendChart patterns={d.patterns} expectedSum={d.patternSummary.expectedSum} />
+        </Section>
+
+        {/* 連號型態 */}
+        <Section title="連號型態" tag="相鄰差 1" subtitle="近期出現連續號碼的頻率，用數據破除「號碼要分散」的迷思。">
+          <ConsecutiveStats recent={d.recent} />
         </Section>
       </div>
 
