@@ -34,7 +34,7 @@ export function buildReportText(game: string): string | null {
   if (!b || !b.latest) return null;
   const top = b.score.slice(0, b.pick).map((s) => String(s.n).padStart(2, "0"));
   return [
-    `🔮 17168 ${b.name} 每日報牌`,
+    `🔮 808888 ${b.name} 每日報牌`,
     `期別參考：${b.latest.period}（${b.latest.date}）`,
     ``,
     `AI 高機率精選 ${b.pick} 碼：`,

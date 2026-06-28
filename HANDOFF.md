@@ -1,20 +1,22 @@
-# 17168（一起一路發）· 交班說明
+# 808888（發發發發）· 交班說明
 
 ## ⭐ 最新狀態（Phase B 完成）
-- **品牌定案：17168，網域 17168.ai**（一起一路發；已確認可註冊，待 RC 購買）。前台＋後台已全面改名。
+- **品牌定案：808888，網域 808888.tw（+ 808888.com.tw）已在 CloudMax 購買**。前台＋後台已全面改名。
 - **架構定案：一站式 Cloudflare**（單一 Worker：靜態前台＋Hono 後端＋D1＋Cron）。
+- **DNS：808888.tw 註冊在 CloudMax**，要把 nameserver 從 CloudMax 預設（ns1~ns4.ix1000.com）改成 Cloudflare 給的 2 組（在 CloudMax「網域管理→技術設定→DNS 自管」頁）。待 RC 開 Cloudflare 帳號後一起做。
 - **後端已改成可直接上 Cloudflare D1**：DB 層 async + AsyncLocalStorage 注入（本地 node:sqlite / 正式 D1 共用同一套碼）。`server/wrangler.toml`、`server/migrations/0001_init.sql`、`server/src/worker.ts` 都備好。本地實測全綠（後台、付費解鎖）。
 - **金流商更正：藍新 NewebPay**（非綠界），已移除 ecpay、改 `newebpay.ts` placeholder，Phase D 實作。
-- **卡點（需 RC）**：買網域、Cloudflare 帳號、LINE Login channel 憑證、藍新憑證。進度報告已寄 ren.studio.dev@gmail.com。
+- **卡點（需 RC）**：Cloudflare 帳號、改 NS 指向 Cloudflare、LINE Login channel 憑證、藍新憑證。
 
 ### 部署到 Cloudflare 的步驟（RC 帳號就緒後一起做）
-1. `cd server && npm i`，`wrangler login`
-2. `wrangler d1 create lottery17168` → 把 database_id 填進 `wrangler.toml`
-3. `wrangler d1 migrations apply lottery17168 --remote`（建表）
-4. 專案根 `next build`（**不要**帶 NEXT_PUBLIC_BASE_PATH，產生根路徑 out/）
-5. `wrangler secret put ADMIN_PASSWORD / SESSION_SECRET / LINE_* / NEWEBPAY_*`
-6. `cd server && npm run deploy`
-7. Cloudflare 後台把 17168.ai 綁到此 Worker（custom domain）
+1. Cloudflare 開帳號 → Add a site：808888.tw → 取得 2 組 Cloudflare nameserver
+2. 到 CloudMax「DNS 自管」把 ns 換成那 2 組（生效 24-48h）
+3. `cd server && npm i`，`wrangler login`
+4. `wrangler d1 create lottery808888` → 把 database_id 填進 `wrangler.toml`
+5. `wrangler d1 migrations apply lottery808888 --remote`（建表）
+6. 專案根 `next build`（**不要**帶 NEXT_PUBLIC_BASE_PATH，產生根路徑 out/）
+7. `wrangler secret put ADMIN_PASSWORD / SESSION_SECRET / LINE_* / NEWEBPAY_*`
+8. `cd server && npm run deploy`，Cloudflare 後台把 808888.tw 綁到此 Worker
 
 ## 線上網址（前台臨時站）
 **https://renstudiodev-tw.github.io/lotterychang/**

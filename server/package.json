@@ -9,7 +9,7 @@
     "seed": "tsx src/seed.ts",
     "deploy": "wrangler deploy",
     "cf:dev": "wrangler dev",
-    "d1:apply": "wrangler d1 migrations apply lottery17168 --remote"
+    "d1:apply": "wrangler d1 migrations apply lottery808888 --remote"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",

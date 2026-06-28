@@ -18,7 +18,7 @@ export const LoginPage: FC<{ error?: string }> = ({ error }) => (
   <Layout title="登入">
     <div style="max-width:380px;margin:8vh auto">
       <div class="card">
-        <div class="brand" style="font-size:26px;margin-bottom:6px">🔮 17168</div>
+        <div class="brand" style="font-size:26px;margin-bottom:6px">🔮 808888</div>
         <h2>後台管理登入</h2>
         {error && <div class="warn" style="margin-bottom:12px">{error}</div>}
         <form method="post" action="/admin/login">

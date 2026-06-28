@@ -1,14 +1,14 @@
-# Cloudflare Workers 一站式部署設定（17168）。
+# Cloudflare Workers 一站式部署設定（808888）。網域 808888.tw（CloudMax 註冊，NS 指向 Cloudflare）。
 # 部署前置（RC 有 Cloudflare 帳號後，我帶著做）：
 #   1. wrangler login
-#   2. wrangler d1 create lottery17168   → 把回傳的 database_id 填到下面
-#   3. wrangler d1 migrations apply lottery17168 --remote   → 建表
+#   2. wrangler d1 create lottery808888   → 把回傳的 database_id 填到下面
+#   3. wrangler d1 migrations apply lottery808888 --remote   → 建表
 #   4. 前台用「無 basePath」重建：在專案根 `next build`（不要帶 NEXT_PUBLIC_BASE_PATH），產生 out/
 #   5. 設密鑰：wrangler secret put ADMIN_PASSWORD / SESSION_SECRET / LINE_* / NEWEBPAY_*
 #   6. wrangler deploy
-#   7. 在 Cloudflare 後台把 17168.ai 綁到這個 Worker（custom domain）
+#   7. 在 Cloudflare 後台把 808888.tw 綁到這個 Worker（custom domain）
 
-name = "lottery17168"
+name = "lottery808888"
 main = "src/worker.ts"
 compatibility_date = "2025-09-01"
 compatibility_flags = ["nodejs_compat"]
@@ -21,7 +21,7 @@ binding = "ASSETS"
 # D1 資料庫（database_id 由 `wrangler d1 create` 後填入）
 [[d1_databases]]
 binding = "DB"
-database_name = "lottery17168"
+database_name = "lottery808888"
 database_id = "REPLACE_AFTER_d1_create"
 migrations_dir = "migrations"
 
@@ -31,5 +31,5 @@ crons = ["0 1 * * *"]
 
 # 非機密變數（機密用 `wrangler secret put`）
 [vars]
-BASE_URL = "https://17168.ai"
-LINE_CALLBACK_URL = "https://17168.ai/auth/line/callback"
+BASE_URL = "https://808888.tw"
+LINE_CALLBACK_URL = "https://808888.tw/auth/line/callback"

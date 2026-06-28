@@ -1,4 +1,4 @@
--- D1 初始 schema（與 src/db/schema.ts 同步）。套用：wrangler d1 migrations apply lottery17168 --remote
+-- D1 初始 schema（與 src/db/schema.ts 同步）。套用：wrangler d1 migrations apply lottery808888 --remote
 CREATE TABLE IF NOT EXISTS users (
   id              TEXT PRIMARY KEY,
   line_user_id    TEXT UNIQUE,

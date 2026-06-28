@@ -19,9 +19,9 @@ const noto = Noto_Sans_TC({
 });
 
 export const metadata: Metadata = {
-  title: "17168 · 一起一路發｜樂透抓牌 AI 統計分析",
+  title: "808888 · 發發發發｜樂透抓牌 AI 統計分析",
   description:
-    "17168 用台灣民間抓牌技巧 + AI 統計，把冷熱號、遺漏值、尾數、拖牌版路自動算給你看。僅供參考娛樂，無法保證中獎。",
+    "808888 用台灣民間抓牌技巧 + AI 統計，把冷熱號、遺漏值、尾數、拖牌版路自動算給你看。僅供參考娛樂，無法保證中獎。",
 };
 
 function Header() {
@@ -30,8 +30,8 @@ function Header() {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-xl">🔮</span>
-          <span className="font-display text-lg font-bold tracking-wide text-gradient">17168</span>
-          <span className="hidden text-xs text-[var(--muted)] sm:inline">一起一路發</span>
+          <span className="font-display text-lg font-bold tracking-wide text-gradient">808888</span>
+          <span className="hidden text-xs text-[var(--muted)] sm:inline">發發發發</span>
         </Link>
         <nav className="flex items-center gap-1 text-sm sm:gap-4">
           <Link href="/games/daily539" className="px-2 py-1 text-[var(--muted)] hover:text-[var(--neon)]">今彩539</Link>
@@ -56,7 +56,7 @@ function Footer() {
           購買彩券請理性節制，未滿 18 歲不得購買。
         </div>
         <div className="flex flex-col items-start justify-between gap-2 sm:flex-row">
-          <span>© {new Date().getFullYear()} 17168 · 由 仁格數位科技工坊 開發</span>
+          <span>© {new Date().getFullYear()} 808888 · 由 仁格數位科技工坊 開發</span>
           <span className="text-[var(--muted)]">資料來源：台灣彩券公開開獎結果</span>
         </div>
       </div>

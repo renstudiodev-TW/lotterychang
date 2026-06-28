@@ -23,7 +23,7 @@ app.get("/", async (c) => {
   const s = await readSession(c);
   if (s?.role === "admin") return c.redirect("/admin");
   return c.json({
-    service: "17168 server",
+    service: "808888 server",
     member: s?.role === "member" ? s.name : null,
     integrations: { lineLogin: lineConfigured(), linePush: lineMessagingConfigured(), payment: ecpayConfigured() },
     hint: "後台 /admin；LINE 登入 /auth/line/login；開發登入 /auth/dev-login",
@@ -35,7 +35,7 @@ app.route("/admin", admin);
 app.route("/", member);
 
 serve({ fetch: app.fetch, port: config.port }, (info) => {
-  console.log(`17168 server → http://localhost:${info.port}`);
+  console.log(`808888 server → http://localhost:${info.port}`);
   console.log(`後台 → http://localhost:${info.port}/admin  (帳號 ${config.adminUser})`);
   if (!lineConfigured()) console.log("⚠️ LINE Login 未設定，用 /auth/dev-login 測試");
 });
