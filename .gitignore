@@ -43,3 +43,10 @@ next-env.d.ts
 # 完整 (未遮罩) 分析 = 付費答案，絕不可公開
 /data/full/
 
+# server (後端)
+/server/node_modules/
+/server/data/
+/server/.env
+*.db
+*.db-*
+
