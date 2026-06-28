@@ -31,8 +31,8 @@ export default async function Home() {
             老師傅的冷熱號、遺漏、尾數、拖牌版路…十多種民間抓牌絕活，AI 一次算給你看，
             每天開獎前報你一手。
           </p>
-          <span className="mt-5 inline-flex items-center gap-1 rounded-full border border-[rgba(255,42,95,0.4)] bg-[rgba(255,42,95,0.06)] px-3 py-1 text-[12px] text-[var(--hot)]">
-            🔥 全亞洲最敢算發發發的 AI
+          <span className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-[rgba(255,42,95,0.45)] bg-[rgba(255,42,95,0.08)] px-4 py-1.5 text-sm font-semibold text-[var(--hot)]">
+            🔥 全亞洲最發發發的 AI 老師傅
           </span>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link href="/games/daily539" className="btn-primary">看今彩539 分析</Link>
