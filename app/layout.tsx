@@ -90,8 +90,18 @@ function Footer() {
           <strong className="text-[var(--text)]">無法提高中獎率、不保證任何中獎結果</strong>，僅供參考娛樂。
           購買彩券請理性節制，未滿 18 歲不得購買。
         </div>
+        <nav className="mb-4 flex flex-wrap gap-x-5 gap-y-2 text-[13px]">
+          <Link href="/pricing" className="hover:text-[var(--neon)]">訂閱方案</Link>
+          <Link href="/terms" className="hover:text-[var(--neon)]">服務條款</Link>
+          <Link href="/refund" className="hover:text-[var(--neon)]">退費政策</Link>
+          <Link href="/privacy" className="hover:text-[var(--neon)]">隱私權政策</Link>
+        </nav>
+        <div className="mb-3 text-[13px] leading-relaxed">
+          <div className="text-[var(--text)]">仁格數位科技工坊　統一編號 61138241</div>
+          <div>高雄市前鎮區武德街153巷17號　聯絡電話 0976-858-794　Email ren.studio.dev@gmail.com</div>
+        </div>
         <div className="flex flex-col items-start justify-between gap-2 sm:flex-row">
-          <span>© {new Date().getFullYear()} 808888.tw · 仁格數位科技工坊開發 renstudio.tw</span>
+          <span>© {new Date().getFullYear()} 808888.tw · 由 仁格數位科技工坊（renstudio.tw）開發營運</span>
           <span className="text-[var(--muted)]">資料來源：台灣彩券公開開獎結果</span>
         </div>
       </div>
