@@ -91,7 +91,7 @@ export function createSubscriptionCheckout(input: {
     PeriodStartType: String(input.periodStartType ?? 2),
     PeriodTimes: String(input.periodTimes ?? 99),
     PayerEmail: input.email,
-    EmailModify: "0",
+    EmailModify: "1", // 允許付款人在藍新頁修改 email（我們未必有 email）
     PaymentInfo: "N",
     OrderInfo: "N",
     ReturnURL: input.returnUrl,

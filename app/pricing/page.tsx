@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SubscribeButton } from "@/components/SubscribeButton";
 
 interface Tier {
   id: string;
@@ -112,23 +113,17 @@ export default function PricingPage() {
                 </li>
               ))}
             </ul>
-            <button
-              className={`mt-6 ${t.highlight ? "btn-primary" : "btn-ghost"}`}
-              disabled
-              title="金流串接開發中"
-            >
-              {t.cta}
-            </button>
-            <span className="mt-2 text-center text-[11px] text-[var(--muted)]">金流串接開發中</span>
+            <SubscribeButton tier={t.id as "free" | "pro" | "max"} label={t.cta} highlight={t.highlight} />
           </div>
         ))}
       </div>
 
       <div className="mt-12 glass p-6">
-        <h3 className="font-display text-lg font-bold text-[var(--text)]">付費方式（規劃中）</h3>
+        <h3 className="font-display text-lg font-bold text-[var(--text)]">付費方式</h3>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          將以綠界 ECPay 信用卡定期定額每月自動扣款，使用 LINE 登入綁定會員，
-          訂閱後即可在網站會員區與 LINE 同步收到每日報牌。
+          以藍新金流 NewebPay 信用卡定期定額每月自動扣款，使用 LINE 登入綁定會員，
+          訂閱後即可在網站會員區與 LINE 同步收到每日報牌。可隨時於會員專區取消續訂，詳見
+          <Link href="/refund" className="text-[var(--neon)] hover:underline">退費政策</Link>。
         </p>
       </div>
 

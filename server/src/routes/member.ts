@@ -2,10 +2,12 @@ import { Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 import { requireMember, issueSession, clearSession } from "../auth.js";
 import { getLoginUrl, exchangeCode, pushMessage } from "../integrations/line.js";
-import { usersRepo, subsRepo, pushRepo } from "../repos.js";
-import { lineConfigured } from "../config.js";
+import { usersRepo, subsRepo, pushRepo, ordersRepo } from "../repos.js";
+import { lineConfigured, config, ecpayConfigured } from "../config.js";
 import { loadFull } from "../reports.js";
-import { tierMeets } from "../plans.js";
+import { tierMeets, PLAN_SEED } from "../plans.js";
+import type { Tier } from "../plans.js";
+import { createSubscriptionCheckout, parseNotify } from "../integrations/newebpay.js";
 import { uuid } from "../util.js";
 
 export const member = new Hono();
@@ -124,4 +126,79 @@ member.post("/api/me/push/test", requireMember, async (c) => {
     return c.json({ ok: false, error: `LINE 拒收（status ${res.status}）。請先把 @808888.tw 加為好友。` }, 502);
   }
   return c.json({ ok: true });
+});
+
+// ── 金流：藍新定期定額 ──
+
+// 建立訂閱付款：產生委託表單欄位，前端自動 POST 到藍新付款頁。
+member.post("/api/pay/checkout", requireMember, async (c) => {
+  if (!ecpayConfigured()) return c.json({ error: "金流尚未設定" }, 503);
+  const s = c.get("session") as { sub: string };
+  const user = await usersRepo.byId(s.sub);
+  if (!user) return c.json({ error: "not found" }, 404);
+  const body = await c.req.parseBody().catch(() => ({}));
+  const tier = String((body as Record<string, unknown>).tier ?? "");
+  const plan = PLAN_SEED.find((p) => p.tier === tier && p.priceTwd > 0);
+  if (!plan) return c.json({ error: "方案不存在" }, 400);
+
+  const merOrderNo = "P" + uuid().replace(/-/g, "").slice(0, 20);
+  await ordersRepo.create({ merOrderNo, userId: user.id, tier: plan.tier, amount: plan.priceTwd });
+
+  const base = config.baseUrl;
+  const day = String(new Date().getUTCDate()).padStart(2, "0"); // 每月扣款日
+  const checkout = createSubscriptionCheckout({
+    orderNo: merOrderNo,
+    amount: plan.priceTwd,
+    itemName: `808888 ${plan.name}`,
+    email: user.email ?? `u${user.id.slice(0, 8)}@808888.tw`,
+    periodType: "M",
+    periodPoint: day,
+    periodStartType: 2,
+    returnUrl: `${base}/api/pay/return`,
+    notifyUrl: `${base}/api/pay/newebpay/notify`,
+  });
+  return c.json({ action: checkout.action, fields: checkout.fields });
+});
+
+// 付款完成後藍新以 Form POST 導回 → 轉回會員頁。
+member.all("/api/pay/return", (c) => c.redirect("/member/?pay=done"));
+
+// 藍新幕後通知（server-to-server）：解密、開通訂閱。公開、不需登入。
+member.post("/api/pay/newebpay/notify", async (c) => {
+  const body = await c.req.parseBody().catch(() => ({}));
+  const period = String((body as Record<string, unknown>).Period ?? "");
+  if (!period) return c.text("0|no period", 400);
+  let notify;
+  try {
+    notify = parseNotify(period);
+  } catch {
+    return c.text("0|decrypt fail", 400);
+  }
+  const result = notify.result as Record<string, unknown>;
+  const merOrderNo = String(result.MerchantOrderNo ?? "");
+  const order = merOrderNo ? await ordersRepo.byOrderNo(merOrderNo) : undefined;
+  if (!order) return c.text("1|order not found", 200); // 回 200 避免藍新重試風暴
+  if (order.status === "paid") return c.text("1|already", 200); // 冪等
+
+  if (notify.status !== "SUCCESS") {
+    await ordersRepo.markFailed(merOrderNo, JSON.stringify(notify));
+    return c.text("1|failed-logged", 200);
+  }
+
+  // 開通訂閱：設等級 + 本期到期日（+1 個月）
+  const end = new Date();
+  end.setMonth(end.getMonth() + 1);
+  const sub = await subsRepo.ensure(order.user_id);
+  await subsRepo.update(sub.id, {
+    tier: order.tier as Tier,
+    status: "active",
+    current_period_end: end.toISOString(),
+    source: "newebpay",
+  });
+  await ordersRepo.markPaid(merOrderNo, {
+    periodNo: String(result.PeriodNo ?? ""),
+    tradeNo: String(result.TradeNo ?? ""),
+    raw: JSON.stringify(notify),
+  });
+  return c.text("1|OK", 200);
 });

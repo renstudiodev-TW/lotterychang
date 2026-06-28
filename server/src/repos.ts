@@ -190,3 +190,42 @@ export const pushRepo = {
     return getDb().get<{ enabled: number }>("SELECT enabled FROM push_targets WHERE user_id = ?", [userId]);
   },
 };
+
+export interface Order {
+  mer_order_no: string;
+  user_id: string;
+  tier: string;
+  amount: number;
+  status: string;
+  period_no: string | null;
+  trade_no: string | null;
+  raw: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const ordersRepo = {
+  async create(o: { merOrderNo: string; userId: string; tier: string; amount: number }): Promise<void> {
+    const now = nowIso();
+    await getDb().run(
+      `INSERT INTO orders (mer_order_no, user_id, tier, amount, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, 'pending', ?, ?)`,
+      [o.merOrderNo, o.userId, o.tier, o.amount, now, now]
+    );
+  },
+  async byOrderNo(merOrderNo: string): Promise<Order | undefined> {
+    return getDb().get<Order>("SELECT * FROM orders WHERE mer_order_no = ?", [merOrderNo]);
+  },
+  async markPaid(merOrderNo: string, opts: { periodNo?: string; tradeNo?: string; raw?: string }): Promise<void> {
+    await getDb().run(
+      "UPDATE orders SET status = 'paid', period_no = ?, trade_no = ?, raw = ?, updated_at = ? WHERE mer_order_no = ?",
+      [opts.periodNo ?? null, opts.tradeNo ?? null, opts.raw ?? null, nowIso(), merOrderNo]
+    );
+  },
+  async markFailed(merOrderNo: string, raw?: string): Promise<void> {
+    await getDb().run(
+      "UPDATE orders SET status = 'failed', raw = ?, updated_at = ? WHERE mer_order_no = ?",
+      [raw ?? null, nowIso(), merOrderNo]
+    );
+  },
+};
