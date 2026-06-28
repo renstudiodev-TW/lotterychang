@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, JetBrains_Mono, Noto_Sans_TC } from "next/font/google";
 import Link from "next/link";
+import { Logo } from "@/components/Logo";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -29,7 +30,7 @@ function Header() {
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[rgba(8,11,16,0.8)] backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-xl">🔮</span>
+          <Logo size={30} withGlow />
           <span className="font-display text-lg font-bold tracking-wide text-gradient">808888</span>
           <span className="hidden text-xs text-[var(--muted)] sm:inline">發發發發</span>
         </Link>
