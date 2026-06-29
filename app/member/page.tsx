@@ -116,9 +116,18 @@ export default function MemberPage() {
         <div className="flex items-center justify-between">
           <div>
             <div className="text-sm text-[var(--muted)]">目前方案</div>
-            <div className="mt-1 font-display text-xl font-bold text-[var(--neon)]">{tierLabel}</div>
+            <div className="mt-1 flex items-center gap-2 font-display text-xl font-bold text-[var(--neon)]">
+              {tierLabel}
+              {me.subStatus === "trial" && (
+                <span className="rounded-full border border-[rgba(255,210,74,0.5)] bg-[rgba(255,210,74,0.12)] px-2 py-0.5 text-[11px] font-bold text-[#ffd24a]">
+                  🎁 14天試用中
+                </span>
+              )}
+            </div>
             {me.periodEnd && (
-              <div className="mt-1 text-[13px] text-[var(--muted)]">有效至 {me.periodEnd.slice(0, 10)}</div>
+              <div className="mt-1 text-[13px] text-[var(--muted)]">
+                {me.subStatus === "trial" ? "試用到期" : "有效至"} {me.periodEnd.slice(0, 10)}
+              </div>
             )}
           </div>
           <Link href="/pricing" className="btn-primary !px-5 !py-2 text-sm">

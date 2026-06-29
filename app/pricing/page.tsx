@@ -88,6 +88,12 @@ export default function PricingPage() {
       <p className="mx-auto mt-4 mb-3 max-w-xl text-center text-[var(--muted)]">
         免費版就能看完整冷熱遺漏統計；訂閱解鎖 AI 高評分精選號、拖牌版路、每日 LINE 精選與交叉選牌。
       </p>
+      <a
+        href="/auth/line/login"
+        className="mx-auto mb-4 flex max-w-md items-center justify-center gap-2 rounded-full border-2 border-[#ffd24a]/60 bg-[linear-gradient(90deg,rgba(255,210,74,0.12),rgba(245,158,11,0.12))] px-5 py-2.5 text-center font-bold text-[#ffd24a] transition hover:brightness-110"
+      >
+        🎁 新會員首次 LINE 登入，免費試用旗艦 14 天 →
+      </a>
       <p className="mx-auto mb-10 max-w-xl text-center text-[12px] text-[var(--hot)]">
         ※ 以下方案與定價為草案，功能分級與價格將與你討論後調整。
       </p>

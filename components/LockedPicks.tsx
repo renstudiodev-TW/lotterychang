@@ -47,10 +47,13 @@ export function LockedPicks({ picks, gameName }: { picks: LockedTeaser[]; gameNa
       </p>
 
       <div className="mt-4 flex flex-col items-center gap-2">
-        <Link href="/pricing" className="btn-primary w-full sm:w-auto">
-          🔓 解鎖完整號碼
-        </Link>
-        <span className="text-[11px] text-[var(--muted)]">解鎖後可看號碼、評分組成、拖牌版路與每日 LINE 精選</span>
+        <a href="/auth/line/login" className="btn-primary w-full sm:w-auto">
+          🎁 LINE 登入，免費試用旗艦 14 天
+        </a>
+        <span className="text-[11px] text-[var(--muted)]">
+          新會員首登送 14 天旗艦，完整解鎖號碼、評分、拖牌版路。
+          <Link href="/pricing" className="text-[var(--neon)] hover:underline">看方案</Link>
+        </span>
       </div>
     </div>
   );
