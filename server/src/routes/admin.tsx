@@ -84,15 +84,21 @@ admin.post("/members/:id/subscription", async (c) => {
   const tier = String(body.tier ?? "free") as Tier;
   const status = String(body.status ?? "active");
   const extendDays = Number(body.extendDays ?? 0);
+  const endDate = String(body.endDate ?? "");
+  const note = String(body.note ?? "").slice(0, 200);
   const sub = await subsRepo.ensure(id);
-  const fields: Record<string, unknown> = { tier, status };
-  if (extendDays > 0) {
+  // 手動調整一律標記來源為 manual，與付費(newebpay)區隔，避免混淆。
+  const fields: Record<string, unknown> = { tier, status, source: "manual" };
+  if (note) fields.note = note;
+  if (endDate) {
+    fields.current_period_end = new Date(`${endDate}T00:00:00.000Z`).toISOString();
+  } else if (extendDays > 0) {
     const base = sub.current_period_end && new Date(sub.current_period_end) > new Date()
       ? new Date(sub.current_period_end) : new Date();
     fields.current_period_end = addDaysIso(extendDays, base);
   }
   await subsRepo.update(sub.id, fields);
-  await auditRepo.log(s.name, "調整訂閱", id, `tier=${tier} status=${status}${extendDays > 0 ? ` +${extendDays}天` : ""}`);
+  await auditRepo.log(s.name, "調整訂閱(手動)", id, `tier=${tier} status=${status}${endDate ? ` 到期${endDate}` : extendDays > 0 ? ` +${extendDays}天` : ""}${note ? ` 備註:${note}` : ""}`);
   return c.redirect(`/admin/members/${id}`);
 });
 

@@ -13,6 +13,16 @@ function StatusBadge({ status }: { status: string | null }) {
   const s = status ?? "active";
   return <span class={`badge b-${s}`}>{s}</span>;
 }
+function isPaidSource(source: string | null): boolean {
+  return source === "newebpay" || source === "ecpay";
+}
+function SourceBadge({ source, tier }: { source: string | null; tier: string | null }) {
+  if (!tier || tier === "free") return <span class="muted">—</span>;
+  if (isPaidSource(source)) return <span class="badge" style="color:var(--cold);border-color:rgba(0,255,135,.45)">💳 付費</span>;
+  if (source === "vip") return <span class="badge" style="color:#ffd24a;border-color:rgba(255,210,74,.5)">👑 VIP</span>;
+  return <span class="badge b-free">✋ 手動</span>;
+}
+const SOURCE_TEXT: Record<string, string> = { newebpay: "藍新定期定額（付費）", ecpay: "藍新定期定額（付費）", manual: "後台手動", vip: "VIP 白名單", comp: "手動優惠" };
 
 export const LoginPage: FC<{ error?: string }> = ({ error }) => (
   <Layout title="登入">
@@ -65,7 +75,7 @@ export const Dashboard: FC<{ session: { name: string }; stats: DashStats; config
 const MembersTable: FC<{ rows: MemberRow[] }> = ({ rows }) => (
   <table>
     <thead>
-      <tr><th>會員</th><th>等級</th><th>狀態</th><th>到期</th><th>加入</th><th></th></tr>
+      <tr><th>會員</th><th>等級</th><th>來源</th><th>狀態</th><th>到期</th><th>加入</th><th></th></tr>
     </thead>
     <tbody>
       {rows.map((m) => (
@@ -75,13 +85,14 @@ const MembersTable: FC<{ rows: MemberRow[] }> = ({ rows }) => (
             <div class="muted mono" style="font-size:11px">{m.line_user_id ?? m.email ?? m.id.slice(0, 8)}</div>
           </td>
           <td><TierBadge tier={m.tier} /></td>
+          <td><SourceBadge source={m.source} tier={m.tier} /></td>
           <td>{m.status === "suspended" ? <span class="badge b-suspended">停權</span> : <StatusBadge status={m.sub_status} />}</td>
           <td class="mono muted">{m.current_period_end ? m.current_period_end.slice(0, 10) : "—"}</td>
           <td class="mono muted">{m.created_at.slice(0, 10)}</td>
           <td><a href={`/admin/members/${m.id}`}>管理 →</a></td>
         </tr>
       ))}
-      {rows.length === 0 && <tr><td colspan={6} class="muted">沒有資料</td></tr>}
+      {rows.length === 0 && <tr><td colspan={7} class="muted">沒有資料</td></tr>}
     </tbody>
   </table>
 );
@@ -151,12 +162,18 @@ export const MemberDetail: FC<{
         </div>
         <table>
           <tbody>
-            <tr><th>來源</th><td>{sub.source === "ecpay" ? "綠界定期定額" : "後台手動"}</td></tr>
+            <tr><th>來源</th><td><SourceBadge source={sub.source} tier={sub.tier} /> {SOURCE_TEXT[sub.source ?? ""] ?? sub.source}</td></tr>
             <tr><th>開始</th><td class="mono muted">{sub.started_at.slice(0, 10)}</td></tr>
             <tr><th>本期到期</th><td class="mono muted">{sub.current_period_end?.slice(0, 10) ?? "永久/免費"}</td></tr>
-            <tr><th>綠界綁定</th><td class="mono muted">{sub.ecpay_merchant_member_id ?? "—"}</td></tr>
           </tbody>
         </table>
+
+        {isPaidSource(sub.source) && (
+          <div class="warn" style="margin-top:12px;border-color:rgba(255,42,95,.5);color:var(--hot)">
+            ⚠️ 此為<b>付費訂閱</b>，由藍新金流自動續期。手動修改會覆蓋付費權限，除非必要請勿更動。
+          </div>
+        )}
+
         <form method="post" action={`/admin/members/${user.id}/subscription`} style="margin-top:14px">
           <div class="row">
             <div>
@@ -175,8 +192,19 @@ export const MemberDetail: FC<{
               <label>延長天數 (選填)</label>
               <input name="extendDays" type="number" placeholder="30" style="width:90px" />
             </div>
+            <div>
+              <label>或設定到期日 (選填)</label>
+              <input name="endDate" type="date" />
+            </div>
           </div>
-          <div style="margin-top:12px"><button class="btn" type="submit">儲存訂閱變更</button></div>
+          <div style="margin-top:10px">
+            <label>備註 (例如：朋友優惠)</label>
+            <input name="note" placeholder="手動調整原因" style="width:100%" />
+          </div>
+          <div style="margin-top:12px">
+            <button class="btn" type="submit">儲存（標記為手動）</button>
+            <span class="muted" style="margin-left:10px">手動儲存會把來源標記成「手動」，方便與付費區隔。</span>
+          </div>
         </form>
       </div>
     </div>

@@ -34,6 +34,7 @@ export interface MemberRow extends User {
   tier: Tier | null;
   sub_status: string | null;
   current_period_end: string | null;
+  source: string | null;
 }
 
 export const usersRepo = {
@@ -132,7 +133,7 @@ export const membersRepo = {
     const limit = opts.limit ?? 50;
     const offset = opts.offset ?? 0;
     return getDb().all<MemberRow>(
-      `SELECT u.*, s.tier AS tier, s.status AS sub_status, s.current_period_end AS current_period_end
+      `SELECT u.*, s.tier AS tier, s.status AS sub_status, s.current_period_end AS current_period_end, s.source AS source
        FROM users u
        LEFT JOIN subscriptions s ON s.id = (
          SELECT id FROM subscriptions WHERE user_id = u.id ORDER BY created_at DESC LIMIT 1
