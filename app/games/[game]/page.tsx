@@ -94,7 +94,7 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
         <PremiumPicks game={game} gameName={d.name}>
           <LockedPicks picks={d.lockedPicks} gameName={d.name} />
         </PremiumPicks>
-        <FreePicks picks={d.freePicks} gameName={d.name} />
+        <FreePicks picks={d.freePicks} gameName={d.name} game={game} dataPeriod={d.latest?.period} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

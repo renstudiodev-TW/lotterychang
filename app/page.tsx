@@ -86,7 +86,7 @@ export default async function Home() {
           <PremiumPicks game="daily539" gameName="今彩539">
             <LockedPicks picks={d539.lockedPicks} gameName="今彩539" />
           </PremiumPicks>
-          <FreePicks picks={d539.freePicks} gameName="今彩539" />
+          <FreePicks picks={d539.freePicks} gameName="今彩539" game="daily539" dataPeriod={d539.latest?.period} />
         </div>
       </section>
 
