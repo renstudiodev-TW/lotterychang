@@ -15,6 +15,7 @@ import {
 import { SumTrendChart } from "@/components/SumTrendChart";
 import { ConsecutiveStats } from "@/components/ConsecutiveStats";
 import { SecondAreaSection } from "@/components/SecondAreaSection";
+import { CustomWindowPanel } from "@/components/CustomWindowPanel";
 
 export function generateStaticParams() {
   return SHIPPING_GAMES.map((game) => ({ game }));
@@ -97,6 +98,9 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
         </PremiumPicks>
         <FreePicks picks={d.freePicks} gameName={d.name} game={game} dataPeriod={d.latest?.period} />
       </div>
+
+      {/* 旗艦自訂分析母數 */}
+      <CustomWindowPanel game={game} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* 威力彩第二區 (1-8) */}

@@ -8,6 +8,7 @@ import { loadFull } from "../reports.js";
 import { tierMeets, PLAN_SEED } from "../plans.js";
 import type { Tier } from "../plans.js";
 import { createSubscriptionCheckout, parseNotify } from "../integrations/newebpay.js";
+import { liveAnalyze } from "../analyze-live.js";
 import { uuid } from "../util.js";
 
 export const member = new Hono();
@@ -102,6 +103,18 @@ member.get("/api/me", requireMember, async (c) => {
     hasLine: Boolean(user.line_user_id),
     pushEnabled: push ? Boolean(push.enabled) : false,
   });
+});
+
+// 旗艦會員自訂母數即時分析：可選任意視窗期數重算。
+member.get("/api/me/analyze", requireMember, async (c) => {
+  const s = c.get("session") as { sub: string };
+  const sub = await subsRepo.ensure(s.sub);
+  if (!tierMeets(sub.tier, "max")) return c.json({ error: "需要旗艦會員" }, 403);
+  const game = c.req.query("game") ?? "daily539";
+  const window = parseInt(c.req.query("window") ?? "50", 10);
+  const result = liveAnalyze(game, window);
+  if (!result) return c.json({ error: "no data" }, 404);
+  return c.json(result);
 });
 
 member.get("/api/me/picks", requireMember, async (c) => {

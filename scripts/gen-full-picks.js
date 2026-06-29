@@ -17,3 +17,13 @@ for (const g of games) {
 fs.mkdirSync(path.join("server", "src", "data"), { recursive: true });
 fs.writeFileSync(path.join("server", "src", "data", "full-picks.json"), JSON.stringify(out));
 console.log("server/src/data/full-picks.json regenerated for", games.join(", "));
+
+// 完整開獎歷史（精簡欄位）打包進 Worker，供旗艦會員自訂母數即時重算用。
+const history = {};
+for (const g of games) {
+  const raw = JSON.parse(fs.readFileSync(path.join("data", "raw", g + ".json"), "utf8"));
+  history[g] = raw.map((d) => ({ period: d.period, date: d.date, numbers: d.numbers, special: d.special }));
+}
+fs.writeFileSync(path.join("server", "src", "data", "history.json"), JSON.stringify(history));
+const sizeKB = (fs.statSync(path.join("server", "src", "data", "history.json")).size / 1024).toFixed(0);
+console.log("server/src/data/history.json regenerated:", sizeKB, "KB");

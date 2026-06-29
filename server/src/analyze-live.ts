@@ -1,0 +1,44 @@
+// 旗艦會員自訂母數即時重算：用打包進 Worker 的完整歷史，依指定視窗重算冷熱/尾數/區間/評分。
+import historyData from "./data/history.json";
+import { GAMES } from "../../lib/lottery/games.js";
+import { hotCold, tailDistribution, zoneStats, secondAreaStats } from "../../lib/lottery/indicators.js";
+import { comboScore } from "../../lib/lottery/score.js";
+import type { Draw, GameId } from "../../lib/lottery/types.js";
+
+const HIST = historyData as Record<string, Draw[]>;
+
+export interface LiveAnalysis {
+  game: string;
+  name: string;
+  window: number;
+  totalDraws: number;
+  latestPeriod: string | null;
+  hotCold: { n: number; freq: number; z: number; tag: string }[];
+  tail: { tail: number; rate: number; tag: string }[];
+  zone: { label: string; rate: number }[];
+  score: { n: number; score: number }[];
+  secondArea: { n: number; freq: number; currentMiss: number; tag: string }[] | null;
+}
+
+export function liveAnalyze(game: string, window: number): LiveAnalysis | null {
+  const g = GAMES[game as GameId];
+  const history = HIST[game];
+  if (!g || !history || history.length === 0) return null;
+  const w = Math.max(10, Math.min(Math.floor(window) || 50, history.length));
+
+  const score = comboScore(history, g, { window: w });
+  return {
+    game,
+    name: g.name,
+    window: w,
+    totalDraws: history.length,
+    latestPeriod: history[history.length - 1]?.period ?? null,
+    hotCold: hotCold(history, g, w).map((h) => ({ n: h.n, freq: h.freq, z: h.z, tag: h.tag })),
+    tail: tailDistribution(history, g, w).map((t) => ({ tail: t.tail, rate: t.rate, tag: t.tag })),
+    zone: zoneStats(history, g, 10, w).map((z) => ({ label: z.label, rate: z.rate })),
+    score: score.slice(0, g.pick * 2).map((s) => ({ n: s.n, score: s.score })),
+    secondArea: g.second
+      ? secondAreaStats(history, g.second.pool, w).map((s) => ({ n: s.n, freq: s.freq, currentMiss: s.currentMiss, tag: s.tag }))
+      : null,
+  };
+}
