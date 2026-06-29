@@ -93,46 +93,68 @@ export default function PricingPage() {
       </p>
 
       <div className="grid gap-5 lg:grid-cols-3">
-        {TIERS.map((t) => (
-          <div
-            key={t.id}
-            className={`relative flex flex-col p-6 ${t.highlight ? "glow-wrap glass border-[rgba(139,92,246,0.5)]" : "glass"}`}
-          >
-            {t.highlight && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--primary)] px-3 py-0.5 text-[11px] font-bold text-white">
-                最受歡迎
-              </span>
-            )}
-            <h2 className="font-display text-xl font-bold text-[var(--text)]">{t.name}</h2>
-            <p className="mt-1 text-sm text-[var(--muted)]">{t.tagline}</p>
-            <div className="mt-4 flex items-end gap-1">
-              <span className="num text-sm text-[var(--muted)]">NT$</span>
-              <span className="num text-4xl font-bold text-[var(--text)]">{t.price}</span>
-              <span className="mb-1 text-sm text-[var(--muted)]">{t.unit}</span>
+        {TIERS.map((t) => {
+          const isMax = t.id === "max";
+          const isPro = Boolean(t.highlight);
+          const cardCls = isMax
+            ? "relative flex flex-col rounded-2xl border-2 border-[#ffd24a]/55 bg-[linear-gradient(160deg,rgba(255,210,74,0.10),rgba(18,24,36,0.92))] p-6 shadow-[0_0_45px_rgba(255,210,74,0.28)] lg:scale-[1.03]"
+            : isPro
+            ? "relative flex flex-col glow-wrap glass border-[rgba(139,92,246,0.5)] p-6"
+            : "relative flex flex-col glass p-6";
+          const gold = "#ffd24a";
+          return (
+            <div key={t.id} className={cardCls}>
+              {isMax && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[linear-gradient(90deg,#ffd24a,#f59e0b)] px-3 py-0.5 text-[11px] font-bold text-[#3a2a00] shadow-[0_0_14px_rgba(255,210,74,0.6)]">
+                  👑 旗艦尊榮
+                </span>
+              )}
+              {isPro && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--primary)] px-3 py-0.5 text-[11px] font-bold text-white">
+                  最受歡迎
+                </span>
+              )}
+              <h2 className="font-display text-xl font-bold" style={isMax ? { color: gold } : undefined}>
+                {!isMax ? <span className="text-[var(--text)]">{t.name}</span> : t.name}
+              </h2>
+              <p className="mt-1 text-sm text-[var(--muted)]">{t.tagline}</p>
+              <div className="mt-4 flex items-end gap-1">
+                <span className="num text-sm text-[var(--muted)]">NT$</span>
+                <span className="num text-4xl font-bold" style={isMax ? { color: gold } : undefined}>
+                  {!isMax ? <span className="text-[var(--text)]">{t.price}</span> : t.price}
+                </span>
+                <span className="mb-1 text-sm text-[var(--muted)]">{t.unit}</span>
+              </div>
+              <ul className="mt-5 flex-1 space-y-2 text-sm">
+                {t.features.map((f, i) => (
+                  <li
+                    key={i}
+                    className={`flex items-start gap-2 ${f.on ? (isMax ? "font-medium text-[var(--text)]" : "text-[var(--text)]") : "text-[var(--muted)] line-through opacity-60"}`}
+                  >
+                    <span style={f.on && isMax ? { color: gold } : undefined} className={f.on ? (isMax ? "" : "text-[var(--cold)]") : "text-[var(--muted)]"}>
+                      {f.on ? "✓" : "—"}
+                    </span>
+                    <span>{f.text}</span>
+                  </li>
+                ))}
+              </ul>
+              {t.id === "free" ? (
+                <SubscribeButton tier="free" label={t.cta} highlight={t.highlight} />
+              ) : (
+                <>
+                  <button
+                    disabled
+                    className={`mt-6 opacity-70 ${isMax ? "inline-flex items-center justify-center rounded-full px-6 py-3 font-bold" : "btn-primary"}`}
+                    style={isMax ? { background: "linear-gradient(90deg,#ffd24a,#f59e0b)", color: "#3a2a00" } : undefined}
+                  >
+                    {t.cta}
+                  </button>
+                  <span className="mt-2 text-center text-[11px] text-[var(--muted)]">金流開通中，敬請期待</span>
+                </>
+              )}
             </div>
-            <ul className="mt-5 flex-1 space-y-2 text-sm">
-              {t.features.map((f, i) => (
-                <li
-                  key={i}
-                  className={`flex items-start gap-2 ${f.on ? "text-[var(--text)]" : "text-[var(--muted)] line-through opacity-60"}`}
-                >
-                  <span className={f.on ? "text-[var(--cold)]" : "text-[var(--muted)]"}>{f.on ? "✓" : "—"}</span>
-                  <span>{f.text}</span>
-                </li>
-              ))}
-            </ul>
-            {t.id === "free" ? (
-              <SubscribeButton tier="free" label={t.cta} highlight={t.highlight} />
-            ) : (
-              <>
-                <button className={`mt-6 ${t.highlight ? "btn-primary" : "btn-ghost"} opacity-60`} disabled>
-                  {t.cta}
-                </button>
-                <span className="mt-2 text-center text-[11px] text-[var(--muted)]">金流開通中，敬請期待</span>
-              </>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="mt-12 glass p-6">
