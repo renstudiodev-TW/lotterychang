@@ -246,11 +246,30 @@ export const AuditPage: FC<{ session: { name: string }; rows: Array<{ actor: str
   </Layout>
 );
 
-export const DeliveriesPage: FC<{ session: { name: string }; rows: Array<{ display_name: string; game: string; channel: string; status: string; created_at: string }>; configWarn: string[] }> = ({ session, rows, configWarn }) => (
+export const DeliveriesPage: FC<{ session: { name: string }; rows: Array<{ display_name: string; game: string; channel: string; status: string; created_at: string }>; pushEnabled: boolean; configWarn: string[] }> = ({ session, rows, pushEnabled, configWarn }) => (
   <Layout title="精選紀錄" session={session} configWarn={configWarn}>
     <div class="row" style="justify-content:space-between">
       <h1>精選寄送紀錄</h1>
       <form method="post" action="/admin/deliveries/run"><button class="btn ghost" type="submit">▶ 手動觸發今日精選 (測試)</button></form>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <h2 style="margin-bottom:4px">每日 LINE 推播（全域開關）</h2>
+          <div class="muted">
+            目前狀態：{pushEnabled
+              ? <span class="badge b-active">● 開啟中</span>
+              : <span class="badge b-suspended">● 已關閉</span>}
+            {" "}關閉後每日 cron 不會發送任何 LINE 推播（控制成本／LINE 額度用）。
+          </div>
+        </div>
+        <form method="post" action="/admin/settings/push">
+          <input type="hidden" name="on" value={pushEnabled ? "0" : "1"} />
+          <button class={`btn ${pushEnabled ? "danger" : ""}`} type="submit">
+            {pushEnabled ? "停用推播" : "啟用推播"}
+          </button>
+        </form>
+      </div>
     </div>
     <div class="card">
       <table>

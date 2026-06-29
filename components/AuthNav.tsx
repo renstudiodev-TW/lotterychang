@@ -8,6 +8,7 @@ interface Me {
   name: string;
   picture: string | null;
   tier: string;
+  isAdmin?: boolean;
 }
 
 // header 右側登入狀態：未登入顯示「LINE 登入」，已登入顯示頭像+暱稱（連到會員專區）。
@@ -39,6 +40,16 @@ export function AuthNav() {
   const tier = TIER_STYLE[me.tier] ?? TIER_STYLE.free;
 
   return (
+    <span className="flex shrink-0 items-center gap-2">
+    {me.isAdmin && (
+      <a
+        href="/admin"
+        className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-[var(--primary)] bg-[rgba(139,92,246,0.15)] px-3 py-1.5 text-sm font-bold text-[var(--primary)] transition hover:brightness-125"
+        title="管理後台"
+      >
+        🛠 後台
+      </a>
+    )}
     <a href="/member/" className={`flex shrink-0 items-center gap-2 ${tier.glow}`} title="會員專區">
       {me.picture ? (
         <img src={me.picture} alt={me.name} className={`h-8 w-8 rounded-full object-cover ring-2 ${tier.ring}`} />
@@ -56,6 +67,7 @@ export function AuthNav() {
         )}
       </span>
     </a>
+    </span>
   );
 }
 

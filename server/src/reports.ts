@@ -4,7 +4,7 @@ import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { pushMessage } from "./integrations/line.js";
-import { pushRepo, subsRepo, deliveriesRepo, usersRepo } from "./repos.js";
+import { pushRepo, subsRepo, deliveriesRepo, usersRepo, settingsRepo } from "./repos.js";
 import { tierMeets } from "./plans.js";
 import fullPicks from "./data/full-picks.json";
 
@@ -66,6 +66,8 @@ export function buildReportText(game: string): string | null {
 export async function runDailyReport(game = "daily539"): Promise<{ total: number; sent: number; skipped: number; stub: boolean }> {
   const text = buildReportText(game);
   if (!text) return { total: 0, sent: 0, skipped: 0, stub: false };
+  // 全域推播開關（後台可關閉，控制 LINE 成本）。
+  if (!(await settingsRepo.isPushEnabled())) return { total: 0, sent: 0, skipped: 0, stub: false };
 
   const targets = await pushRepo.enabledTargets();
   let sent = 0;

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
-import { requireMember, issueSession, clearSession } from "../auth.js";
+import { requireMember, issueSession, clearSession, isAdminUser } from "../auth.js";
 import { getLoginUrl, exchangeCode, pushMessage } from "../integrations/line.js";
 import { usersRepo, subsRepo, pushRepo, ordersRepo } from "../repos.js";
 import { lineConfigured, config, ecpayConfigured } from "../config.js";
@@ -115,6 +115,7 @@ member.get("/api/me", requireMember, async (c) => {
     hasLine: Boolean(user.line_user_id),
     pushEnabled: push ? Boolean(push.enabled) : false,
     canPush,
+    isAdmin: await isAdminUser(user.id),
   });
 });
 

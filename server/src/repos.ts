@@ -251,4 +251,20 @@ export const countersRepo = {
     );
     return countersRepo.get(key);
   },
+  async set(key: string, value: number): Promise<void> {
+    await getDb().run(
+      "INSERT INTO counters (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+      [key, value]
+    );
+  },
+};
+
+// 全域 LINE 推播開關（預設開：push_disabled 不存在或 0 即為開）。
+export const settingsRepo = {
+  async isPushEnabled(): Promise<boolean> {
+    return (await countersRepo.get("push_disabled")) !== 1;
+  },
+  async setPushEnabled(on: boolean): Promise<void> {
+    await countersRepo.set("push_disabled", on ? 0 : 1);
+  },
 };

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { requireAdmin, issueSession, clearSession, checkAdminCredentials } from "../auth.js";
-import { usersRepo, subsRepo, membersRepo, auditRepo, deliveriesRepo } from "../repos.js";
+import { usersRepo, subsRepo, membersRepo, auditRepo, deliveriesRepo, settingsRepo } from "../repos.js";
 import { LoginPage, Dashboard, MembersPage, MemberDetail, AuditPage, DeliveriesPage } from "../views/pages.js";
 import { lineConfigured, ecpayConfigured, lineMessagingConfigured } from "../config.js";
 import { runDailyReport } from "../reports.js";
@@ -109,7 +109,15 @@ admin.get("/audit", async (c) => {
 
 admin.get("/deliveries", async (c) => {
   const s = c.get("session") as { name: string };
-  return c.html(<DeliveriesPage session={s} rows={(await deliveriesRepo.recent(100)) as never[]} configWarn={configWarn()} />);
+  return c.html(<DeliveriesPage session={s} rows={(await deliveriesRepo.recent(100)) as never[]} pushEnabled={await settingsRepo.isPushEnabled()} configWarn={configWarn()} />);
+});
+admin.post("/settings/push", async (c) => {
+  const s = c.get("session") as { name: string };
+  const body = await c.req.parseBody();
+  const on = String(body.on) === "1";
+  await settingsRepo.setPushEnabled(on);
+  await auditRepo.log(s.name, on ? "開啟全域LINE推播" : "關閉全域LINE推播");
+  return c.redirect("/admin/deliveries");
 });
 admin.post("/deliveries/run", async (c) => {
   const s = c.get("session") as { name: string };

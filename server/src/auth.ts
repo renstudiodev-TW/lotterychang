@@ -3,8 +3,20 @@ import { sign, verify } from "hono/jwt";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import type { Context, MiddlewareHandler } from "hono";
 import { config } from "./config.js";
+import { usersRepo } from "./repos.js";
 
 const COOKIE = "plsess";
+
+// 站長的 LINE 帳號：用 LINE 登入即等同管理員，免再輸入後台帳密。
+export const ADMIN_LINE_IDS = new Set<string>([
+  "U613581e7cbe8f5c3f2e1c31d3e1d6a24", // Ren (ren.studio.dev)
+  "U3237b62e01288cbf92e7872114e8427f", // 張博仁
+]);
+
+export async function isAdminUser(userId: string): Promise<boolean> {
+  const user = await usersRepo.byId(userId);
+  return Boolean(user?.line_user_id && ADMIN_LINE_IDS.has(user.line_user_id));
+}
 
 export interface Session {
   sub: string; // userId 或 "admin"
@@ -39,12 +51,18 @@ export async function readSession(c: Context): Promise<Session | null> {
   }
 }
 
-/** 後台守衛：非 admin 導回登入頁 */
+/** 後台守衛：admin 帳密 session，或站長 LINE 帳號(白名單)皆可進入 */
 export const requireAdmin: MiddlewareHandler = async (c, next) => {
   const s = await readSession(c);
-  if (!s || s.role !== "admin") return c.redirect("/admin/login");
-  c.set("session", s);
-  await next();
+  if (s?.role === "admin") {
+    c.set("session", s);
+    return next();
+  }
+  if (s?.role === "member" && (await isAdminUser(s.sub))) {
+    c.set("session", { ...s, role: "admin" });
+    return next();
+  }
+  return c.redirect("/admin/login");
 };
 
 /** 會員 API 守衛：未登入回 401 */
