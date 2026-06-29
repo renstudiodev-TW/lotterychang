@@ -42,6 +42,7 @@ body {
   color: var(--text);
   font-family: var(--font-sans);
   letter-spacing: 0.01em;
+  overflow-x: hidden; /* 防止任何意外橫向捲動（手機保險） */
   /* 賽博微光網格 (透明度 < 2%) */
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
