@@ -6,6 +6,7 @@ import { NumberBall, ZodiacBadge } from "@/components/NumberBall";
 import { Section } from "@/components/Section";
 import { HotColdGrid } from "@/components/HotColdGrid";
 import { LockedPicks } from "@/components/LockedPicks";
+import { PremiumPicks } from "@/components/PremiumPicks";
 import { FreePicks } from "@/components/FreePicks";
 import { LockedModule } from "@/components/LockedModule";
 import {
@@ -90,7 +91,9 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
 
       {/* 每日精選：鎖定高評分 + 免費參考 */}
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
-        <LockedPicks picks={d.lockedPicks} gameName={d.name} />
+        <PremiumPicks game={game} gameName={d.name}>
+          <LockedPicks picks={d.lockedPicks} gameName={d.name} />
+        </PremiumPicks>
         <FreePicks picks={d.freePicks} gameName={d.name} />
       </div>
 

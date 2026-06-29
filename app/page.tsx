@@ -3,6 +3,7 @@ import Image from "next/image";
 import { CodeRain } from "@/components/CodeRain";
 import { loadGame, loadIndex } from "@/lib/data";
 import { LockedPicks } from "@/components/LockedPicks";
+import { PremiumPicks } from "@/components/PremiumPicks";
 import { FreePicks } from "@/components/FreePicks";
 import { LatestDraws } from "@/components/LatestDraws";
 import { LotteryNews } from "@/components/LotteryNews";
@@ -82,7 +83,9 @@ export default async function Home() {
           <Link href="/games/daily539" className="text-sm text-[var(--neon)] hover:underline">完整分析 →</Link>
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
-          <LockedPicks picks={d539.lockedPicks} gameName="今彩539" />
+          <PremiumPicks game="daily539" gameName="今彩539">
+            <LockedPicks picks={d539.lockedPicks} gameName="今彩539" />
+          </PremiumPicks>
           <FreePicks picks={d539.freePicks} gameName="今彩539" />
         </div>
       </section>

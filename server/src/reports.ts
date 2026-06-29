@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { pushMessage } from "./integrations/line.js";
 import { pushRepo, subsRepo, deliveriesRepo, usersRepo } from "./repos.js";
 import { tierMeets } from "./plans.js";
+import fullPicks from "./data/full-picks.json";
 
 interface FullBundle {
   name: string;
@@ -27,16 +28,19 @@ function fullDir(): string | null {
 }
 
 export function loadFull(game: string): FullBundle | null {
-  // 本地由檔案系統讀；Workers 無 fs（Phase C 改由 KV/R2 提供）→ 優雅回 null。
+  // 1) 本地 Node：從 data/full 讀完整檔（含所有指標）。
   try {
     const dir = fullDir();
-    if (!dir) return null;
-    const f = path.join(dir, `${game}.json`);
-    if (!existsSync(f)) return null;
-    return JSON.parse(readFileSync(f, "utf8")) as FullBundle;
+    if (dir) {
+      const f = path.join(dir, `${game}.json`);
+      if (existsSync(f)) return JSON.parse(readFileSync(f, "utf8")) as FullBundle;
+    }
   } catch {
-    return null;
+    /* fall through */
   }
+  // 2) Workers（無 fs）：用打包進 Worker 的精簡高分 picks（只給已驗證付費會員的 API 用）。
+  const b = (fullPicks as Record<string, FullBundle | undefined>)[game];
+  return b ?? null;
 }
 
 /** 產生某彩種的精選文字 (含高評分精選號，僅付費會員可收) */
