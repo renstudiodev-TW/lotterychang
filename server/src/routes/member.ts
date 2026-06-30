@@ -5,7 +5,7 @@ import { getLoginUrl, exchangeCode, pushMessage } from "../integrations/line.js"
 import { usersRepo, subsRepo, pushRepo, ordersRepo, auditRepo } from "../repos.js";
 import { lineConfigured, config, ecpayConfigured } from "../config.js";
 import { loadFull } from "../reports.js";
-import { tierMeets, PLAN_SEED } from "../plans.js";
+import { tierMeets, canReceivePush, PLAN_SEED } from "../plans.js";
 import type { Tier } from "../plans.js";
 import { createSubscriptionCheckout, parseNotify } from "../integrations/newebpay.js";
 import { liveAnalyze, liveDrag, liveMethodPicks } from "../analyze-live.js";
@@ -55,7 +55,7 @@ member.get("/auth/line/callback", async (c) => {
         picture_url: prof.pictureUrl ?? null,
         email: prof.email ?? null,
       });
-      // 首次註冊送 14 天旗艦試用（不含每日 LINE 推播，那是付費專屬）。
+      // 首次註冊送 14 天旗艦試用（含每日 LINE 精選推播，讓試用者實際體驗；到期自動降級鎖住）。
       const sub = await subsRepo.ensure(user.id);
       const end = new Date();
       end.setDate(end.getDate() + 14);
@@ -102,8 +102,8 @@ member.get("/api/me", requireMember, async (c) => {
   if (!user) return c.json({ error: "not found" }, 404);
   const sub = await subsRepo.ensureActive(user.id);
   const push = await pushRepo.forUser(user.id);
-  // 每日 LINE 推播為正式付費（active）會員專屬，試用(trial)不含。
-  const canPush = tierMeets(sub.tier, "pro") && sub.status === "active";
+  // 每日 LINE 推播：進階以上的付費或試用會員皆可用；ensureActive 已把過期試用降級鎖住。
+  const canPush = canReceivePush(sub.tier, sub.status);
   return c.json({
     id: user.id,
     name: user.display_name,
@@ -184,8 +184,8 @@ member.post("/api/me/push/test", requireMember, async (c) => {
   const user = await usersRepo.byId(s.sub);
   if (!user?.line_user_id) return c.json({ ok: false, error: "無 LINE 綁定" }, 400);
   const sub = await subsRepo.ensureActive(s.sub);
-  if (!(tierMeets(sub.tier, "pro") && sub.status === "active")) {
-    return c.json({ ok: false, error: "每日 LINE 推播為正式付費會員專屬，試用/免費不含。" }, 403);
+  if (!canReceivePush(sub.tier, sub.status)) {
+    return c.json({ ok: false, error: "每日 LINE 推播需進階以上的付費或試用資格，試用到期後請訂閱。" }, 403);
   }
   const res = await pushMessage(user.line_user_id, [
     {

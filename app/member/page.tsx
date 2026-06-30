@@ -142,12 +142,12 @@ export default function MemberPage() {
           <div>
             <div className="font-bold text-[var(--text)]">
               每日 LINE 精選推播
-              <span className="ml-2 rounded-full border border-[rgba(255,210,74,0.5)] bg-[rgba(255,210,74,0.12)] px-2 py-0.5 text-[10px] font-bold text-[#ffd24a]">
-                正式付費專屬
+              <span className="ml-2 rounded-full border border-[rgba(0,240,255,0.5)] bg-[rgba(0,240,255,0.12)] px-2 py-0.5 text-[10px] font-bold text-[var(--neon)]">
+                進階以上 · 試用可體驗
               </span>
             </div>
             <div className="mt-1 text-[13px] text-[var(--muted)]">
-              開獎前由 808888 官方帳號把當日精選號推到你的 LINE。<b className="text-[var(--text)]">此為正式付費會員專屬功能，免費與試用期間不含。</b>
+              開獎前由 808888 官方帳號把當日精選號推到你的 LINE。<b className="text-[var(--text)]">進階以上會員（含 14 天試用）皆可使用；免費會員與試用到期後不含。</b>
             </div>
           </div>
           {me.canPush && (
@@ -166,6 +166,11 @@ export default function MemberPage() {
 
         {me.canPush ? (
           <div className="mt-4 border-t border-[var(--border)] pt-4">
+            {me.subStatus === "trial" && (
+              <p className="mb-3 rounded-lg border border-[rgba(255,210,74,0.4)] bg-[rgba(255,210,74,0.08)] px-3 py-2 text-[13px] text-[#ffd24a]">
+                🎁 試用期間可完整體驗每日推播{me.periodEnd ? `（到 ${me.periodEnd.slice(0, 10)}）` : ""}。到期後需升級正式會員才能繼續收到。
+              </p>
+            )}
             <button onClick={sendTest} disabled={testBusy} className="btn-ghost !px-4 !py-2 text-sm disabled:opacity-60">
               {testBusy ? "發送中…" : "傳一則測試推播給我"}
             </button>

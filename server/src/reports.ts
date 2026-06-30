@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { pushMessage } from "./integrations/line.js";
 import { pushRepo, subsRepo, deliveriesRepo, usersRepo, settingsRepo } from "./repos.js";
-import { tierMeets } from "./plans.js";
+import { canReceivePush } from "./plans.js";
 import fullPicks from "./data/full-picks.json";
 
 interface FullBundle {
@@ -112,11 +112,12 @@ export async function runDailyReport(games: string[] = ["daily539"]): Promise<{ 
 
   for (const t of targets) {
     const user = await usersRepo.byId(t.user_id);
+    // ensureActive 會把過期試用/付費降為 free+expired → 自動鎖住推播。
     const sub = await subsRepo.ensureActive(t.user_id);
-    // 每日推播僅限正式付費(active)會員；試用(trial)與免費不送。
-    const eligible = user?.status === "active" && tierMeets(sub.tier, "pro") && sub.status === "active";
+    // 每日推播：進階以上的付費(active)或試用(trial)會員皆可收；免費/過期/停權不送。
+    const eligible = user?.status === "active" && canReceivePush(sub.tier, sub.status);
     if (!eligible) {
-      await deliveriesRepo.log(t.user_id, label, "line", "skipped", { detail: "未達付費資格(試用/免費不含推播)" });
+      await deliveriesRepo.log(t.user_id, label, "line", "skipped", { detail: "未達推播資格(免費/過期/停權)" });
       skipped++;
       continue;
     }

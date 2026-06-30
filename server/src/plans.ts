@@ -41,3 +41,16 @@ export const TIER_RANK: Record<Tier, number> = { free: 0, pro: 1, max: 2 };
 export function tierMeets(userTier: Tier, required: Tier): boolean {
   return TIER_RANK[userTier] >= TIER_RANK[required];
 }
+
+/**
+ * 每日 LINE 精選推播資格（單一來源，三處共用：/api/me、push/test、每日 cron）。
+ * 規則：進階(pro)以上，且訂閱為「有效(active)」或「試用(trial)」。
+ *
+ * ⚠️ 到期保護：本函式只看當下 tier/status，不負責判斷到期。呼叫前務必先經
+ *    subsRepo.ensureActive()，它會把過期的付費/試用降為 free + expired；
+ *    降級後 tier 為 free → tierMeets 失敗 → 自動鎖住。傳入未經 ensureActive
+ *    的訂閱會繞過到期鎖，務必不要這樣用。
+ */
+export function canReceivePush(tier: Tier, subStatus: string): boolean {
+  return tierMeets(tier, "pro") && (subStatus === "active" || subStatus === "trial");
+}
