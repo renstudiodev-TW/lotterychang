@@ -6,7 +6,7 @@ import { admin } from "./routes/admin.js";
 import { member } from "./routes/member.js";
 import { publicApi } from "./routes/public.js";
 import { readSession } from "./auth.js";
-import { runDailyReport } from "./reports.js";
+import { runDailyReport, gamesForToday } from "./reports.js";
 import { lineConfigured, lineMessagingConfigured, ecpayConfigured } from "./config.js";
 
 export interface Env {
@@ -93,7 +93,7 @@ export default {
     if (event.cron === "0 15 * * *") {
       ctx.waitUntil(triggerGitHubRebuild(env));
     } else {
-      ctx.waitUntil(dbAls.run(new D1Db(env.DB), () => runDailyReport("daily539").then(() => undefined)));
+      ctx.waitUntil(dbAls.run(new D1Db(env.DB), () => runDailyReport(gamesForToday()).then(() => undefined)));
     }
   },
 };

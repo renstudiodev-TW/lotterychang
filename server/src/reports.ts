@@ -59,12 +59,47 @@ export function buildReportText(game: string): string | null {
   ].join("\n");
 }
 
+// 各彩種開獎日（台灣星期）：今彩539 一到六、大樂透 二五、威力彩 一四。
+// 回傳「今天該推哪些彩種」。週日無開獎 → 空陣列。
+export function gamesForToday(): string[] {
+  const twWeekday = new Date(Date.now() + 8 * 3600 * 1000).getUTCDay(); // 0=日..6=六（台灣時間）
+  const map: Record<number, string[]> = {
+    0: [],
+    1: ["daily539", "superLotto638"],
+    2: ["daily539", "lotto649"],
+    3: ["daily539"],
+    4: ["daily539", "superLotto638"],
+    5: ["daily539", "lotto649"],
+    6: ["daily539"],
+  };
+  return map[twWeekday] ?? ["daily539"];
+}
+
+/** 把多個彩種的精選合併成一則訊息（省 LINE 額度，一天一則） */
+export function buildCombinedText(games: string[]): string | null {
+  const sections: string[] = [];
+  for (const g of games) {
+    const b = loadFull(g);
+    if (!b || !b.latest) continue;
+    const top = b.score.slice(0, b.pick).map((s) => String(s.n).padStart(2, "0"));
+    sections.push(`【${b.name}】參考期 ${b.latest.period}（${b.latest.date}）\nAI 高評分精選：${top.join("、")}`);
+  }
+  if (sections.length === 0) return null;
+  return [
+    `🔮 808888 今日精選`,
+    ``,
+    sections.join("\n\n"),
+    ``,
+    `⚠️ 樂透為獨立隨機事件，僅供參考娛樂，不保證中獎。`,
+  ].join("\n");
+}
+
 /**
- * 觸發精選：對所有「啟用推播 + 訂閱達 pro 以上 + 帳號正常」的會員推送。
+ * 觸發精選：把「指定彩種（預設今日開獎的）」合併成一則，推給有效付費會員。
  * 回傳寄送摘要。
  */
-export async function runDailyReport(game = "daily539"): Promise<{ total: number; sent: number; skipped: number; stub: boolean }> {
-  const text = buildReportText(game);
+export async function runDailyReport(games: string[] = ["daily539"]): Promise<{ total: number; sent: number; skipped: number; stub: boolean }> {
+  const text = buildCombinedText(games);
   if (!text) return { total: 0, sent: 0, skipped: 0, stub: false };
   // 全域推播開關（後台可關閉，控制 LINE 成本）。
   if (!(await settingsRepo.isPushEnabled())) return { total: 0, sent: 0, skipped: 0, stub: false };
@@ -73,8 +108,7 @@ export async function runDailyReport(game = "daily539"): Promise<{ total: number
   let sent = 0;
   let skipped = 0;
   let stub = false;
-  const b = loadFull(game);
-  const period = b?.latest?.period;
+  const label = games.join(",");
 
   for (const t of targets) {
     const user = await usersRepo.byId(t.user_id);
@@ -82,14 +116,13 @@ export async function runDailyReport(game = "daily539"): Promise<{ total: number
     // 每日推播僅限正式付費(active)會員；試用(trial)與免費不送。
     const eligible = user?.status === "active" && tierMeets(sub.tier, "pro") && sub.status === "active";
     if (!eligible) {
-      await deliveriesRepo.log(t.user_id, game, "line", "skipped", { drawPeriod: period, detail: "未達付費資格(試用/免費不含推播)" });
+      await deliveriesRepo.log(t.user_id, label, "line", "skipped", { detail: "未達付費資格(試用/免費不含推播)" });
       skipped++;
       continue;
     }
     const res = await pushMessage(t.line_user_id, [{ type: "text", text }]);
     if (res.stub) stub = true;
-    await deliveriesRepo.log(t.user_id, game, "line", res.ok ? "sent" : "failed", {
-      drawPeriod: period,
+    await deliveriesRepo.log(t.user_id, label, "line", res.ok ? "sent" : "failed", {
       detail: res.stub ? "LINE stub (未設定 token)" : `status ${res.status ?? ""}`,
     });
     if (res.ok) sent++;

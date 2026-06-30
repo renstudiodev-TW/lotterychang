@@ -110,7 +110,7 @@ admin.post("/settings/push", async (c) => {
 });
 admin.post("/deliveries/run", async (c) => {
   const s = c.get("session") as { name: string };
-  const res = await runDailyReport("daily539");
+  const res = await runDailyReport(["daily539", "lotto649", "superLotto638"]);
   await auditRepo.log(s.name, "手動觸發精選", undefined, `寄送${res.sent} 略過${res.skipped}${res.stub ? " (LINE stub)" : ""}`);
   return c.redirect("/admin/deliveries");
 });
