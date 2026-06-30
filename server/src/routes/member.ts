@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 import { requireMember, issueSession, clearSession, isAdminUser } from "../auth.js";
 import { getLoginUrl, exchangeCode, pushMessage } from "../integrations/line.js";
-import { usersRepo, subsRepo, pushRepo, ordersRepo } from "../repos.js";
+import { usersRepo, subsRepo, pushRepo, ordersRepo, auditRepo } from "../repos.js";
 import { lineConfigured, config, ecpayConfigured } from "../config.js";
 import { loadFull } from "../reports.js";
 import { tierMeets, PLAN_SEED } from "../plans.js";
@@ -234,7 +234,17 @@ member.post("/api/pay/checkout", requireMember, async (c) => {
 });
 
 // 付款完成後藍新以 Form POST 導回 → 轉回會員頁。
-member.all("/api/pay/return", (c) => c.redirect("/member/?pay=done"));
+member.all("/api/pay/return", async (c) => {
+  try {
+    const body = await c.req.parseBody().catch(() => ({}));
+    const dump = JSON.stringify(body).slice(0, 600);
+    console.log("[pay/return] 藍新導回內容:", dump);
+    await auditRepo.log("system", "藍新導回", undefined, dump);
+  } catch (e) {
+    await auditRepo.log("system", "藍新導回-錯誤", undefined, String(e));
+  }
+  return c.redirect("/member/?pay=done");
+});
 
 // 藍新幕後通知（server-to-server）：解密、開通訂閱。公開、不需登入。
 member.post("/api/pay/newebpay/notify", async (c) => {
