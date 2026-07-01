@@ -10,6 +10,18 @@ import {
 import { comboScore, type ScoreItem } from "./score";
 import { backtest, type MethodResult } from "./backtest";
 
+/** 上一期戰績：用「開獎前的資料」算出的 AI 精選，對比該期實際開獎的命中。 */
+export interface LastHit {
+  period: string;
+  date: string;
+  actual: number[];
+  special: number | null;
+  predicted: number[]; // 用 history[:-1] 的 AI 綜合評分前 pick 名
+  matched: number[]; // predicted ∩ actual
+  count: number;
+  pick: number;
+}
+
 export interface AnalysisBundle {
   game: string;
   name: string;
@@ -20,6 +32,7 @@ export interface AnalysisBundle {
   year: number;
   window: number;
   latest: Draw | null;
+  lastHit: LastHit | null;
   recent: Draw[]; // 最近 20 期 (走勢圖用)
   hotCold: HotColdItem[];
   omission: OmissionItem[];
@@ -91,6 +104,29 @@ export function analyze(
   const score = comboScore(history, g, { window, zoneSize });
   const recommendations = score.slice(0, g.pick * 2).map((s) => s.n).sort((a, b) => a - b);
 
+  // 上一期戰績：用開獎「前」的資料(history[:-1])算 AI 精選，比對最新一期實際開獎。
+  let lastHit: LastHit | null = null;
+  const latestDraw = history[history.length - 1];
+  if (latestDraw && history.length > window + 1) {
+    const prior = history.slice(0, -1);
+    const predicted = comboScore(prior, g, { window, zoneSize })
+      .slice(0, g.pick)
+      .map((s) => s.n)
+      .sort((a, b) => a - b);
+    const actualSet = new Set(latestDraw.numbers);
+    const matched = predicted.filter((n) => actualSet.has(n));
+    lastHit = {
+      period: latestDraw.period,
+      date: latestDraw.date,
+      actual: latestDraw.numbers,
+      special: latestDraw.special ?? null,
+      predicted,
+      matched,
+      count: matched.length,
+      pick: g.pick,
+    };
+  }
+
   return {
     game: g.id,
     name: g.name,
@@ -101,6 +137,7 @@ export function analyze(
     year,
     window,
     latest: history[history.length - 1] ?? null,
+    lastHit,
     recent: history.slice(-20),
     hotCold: hotCold(history, g, window),
     omission: omission(history, g),

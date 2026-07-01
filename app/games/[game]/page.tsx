@@ -21,6 +21,7 @@ import { MethodLeaderboard } from "@/components/MethodLeaderboard";
 import { SelectionProvider } from "@/components/selection/SelectionContext";
 import { SelectionPanel } from "@/components/selection/SelectionPanel";
 import { SelectionSticky } from "@/components/selection/SelectionSticky";
+import { LastDrawMatch } from "@/components/selection/LastDrawMatch";
 import {
   HotColdVerdict, OmissionVerdict, TailVerdict, ZoneVerdict, SumVerdict,
   OddEvenVerdict, ACVerdict, ConsecutiveVerdict, ZodiacVerdict, SecondAreaVerdict,
@@ -109,6 +110,18 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
       {/* 自選號碼即時驗牌：選號框 + 黏頂顯示條 */}
       <SelectionPanel hotCold={d.hotCold} />
       <SelectionSticky hotCold={d.hotCold} />
+
+      {/* 自選 vs 最新一期開獎：命中即慶祝，方便驗證哪組參數最接近 */}
+      {latest && (
+        <LastDrawMatch
+          latest={{
+            period: latest.period,
+            date: latest.date,
+            numbers: latest.numbers,
+            special: latest.special ?? null,
+          }}
+        />
+      )}
 
       {/* 每日精選：鎖定高評分 + 免費參考 */}
       <div className="mb-6 grid gap-4 lg:grid-cols-2">

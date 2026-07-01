@@ -20,6 +20,7 @@ export interface PublicBundle {
   year: number;
   window: number;
   latest: AnalysisBundle["latest"];
+  lastHit: AnalysisBundle["lastHit"];
   recent: AnalysisBundle["recent"];
   // 免費指標 (完整)
   hotCold: AnalysisBundle["hotCold"];
@@ -65,6 +66,7 @@ export function publicize(full: AnalysisBundle): PublicBundle {
     year: full.year,
     window: full.window,
     latest: full.latest,
+    lastHit: full.lastHit,
     recent: full.recent,
     hotCold: full.hotCold,
     omission: full.omission,

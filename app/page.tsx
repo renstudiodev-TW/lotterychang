@@ -6,8 +6,10 @@ import { LockedPicks } from "@/components/LockedPicks";
 import { PremiumPicks } from "@/components/PremiumPicks";
 import { FreePicks } from "@/components/FreePicks";
 import { LatestDraws } from "@/components/LatestDraws";
+import { LastHitBoard } from "@/components/LastHitBoard";
 import { LotteryNews } from "@/components/LotteryNews";
 import { Faq } from "@/components/Faq";
+import { SHIPPING_GAMES } from "@/lib/data";
 
 // next/image 不會自動為絕對路徑 src 補上 basePath，GitHub Pages 專案頁需手動帶入。
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
@@ -19,7 +21,13 @@ const GAME_META: Record<string, { emoji: string; desc: string }> = {
 };
 
 export default async function Home() {
-  const [index, d539] = await Promise.all([loadIndex(), loadGame("daily539")]);
+  const [index, ...bundles] = await Promise.all([loadIndex(), ...SHIPPING_GAMES.map((g) => loadGame(g))]);
+  const d539 = bundles[SHIPPING_GAMES.indexOf("daily539")];
+  const lastHitItems = SHIPPING_GAMES.map((g, i) => ({
+    game: g,
+    name: bundles[i].name,
+    lastHit: bundles[i].lastHit,
+  }));
 
   return (
     <div className="mx-auto max-w-6xl px-5">
@@ -74,6 +82,18 @@ export default async function Home() {
           <span className="text-xs text-[var(--muted)]">資料來源：台灣彩券</span>
         </div>
         <LatestDraws />
+      </section>
+
+      {/* 上一期 AI 戰績：預測 vs 實際開獎 */}
+      <section className="mb-16">
+        <div className="mb-4 flex items-end justify-between">
+          <h2 className="font-display text-2xl font-extrabold text-[var(--text)] sm:text-3xl">上一期 AI 戰績</h2>
+          <span className="text-xs text-[var(--muted)]">開獎前精選 vs 實際開獎</span>
+        </div>
+        <LastHitBoard items={lastHitItems} />
+        <p className="mt-3 text-[12px] text-[var(--muted)]">
+          以「開獎前的資料」算出 AI 精選，再對比當期實際開獎。歷史命中不代表未來，樂透為獨立隨機事件，僅供參考娛樂。
+        </p>
       </section>
 
       {/* 今日精選 (539) */}
