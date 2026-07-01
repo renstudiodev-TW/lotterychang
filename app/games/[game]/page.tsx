@@ -22,7 +22,7 @@ import { SelectionProvider } from "@/components/selection/SelectionContext";
 import { SelectionPanel } from "@/components/selection/SelectionPanel";
 import { SelectionSticky } from "@/components/selection/SelectionSticky";
 import { LastDrawMatch } from "@/components/selection/LastDrawMatch";
-import { AttributionCard } from "@/components/AttributionCard";
+import { TierAttributionCard } from "@/components/TierAttributionCard";
 import {
   HotColdVerdict, OmissionVerdict, TailVerdict, ZoneVerdict, SumVerdict,
   OddEvenVerdict, ACVerdict, ConsecutiveVerdict, ZodiacVerdict, SecondAreaVerdict,
@@ -124,8 +124,8 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
         />
       )}
 
-      {/* 反向驗證：這期哪個抓法×參數最準（事後回推） */}
-      <AttributionCard data={d.reverseAttribution} />
+      {/* 反向驗證：各獎項回推，從頭獎往下列出達標的抓法×參數（事後回推） */}
+      <TierAttributionCard data={d.tierAttribution} />
 
       {/* 每日精選：鎖定高評分 + 免費參考 */}
       <div className="mb-6 grid gap-4 lg:grid-cols-2">

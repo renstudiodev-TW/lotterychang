@@ -154,6 +154,183 @@ export function attributionForLatest(
   };
 }
 
+// ── 獎項階梯回推：對某一期，枚舉各抓法×參數的命中，對應到正式獎項，依頭獎往下排 ──
+
+export interface TierCombo {
+  method: string;
+  label: string;
+  window: number; // 0 = 遺漏(不分視窗)
+  mainHits: number;
+}
+export interface TierRow {
+  key: string;
+  label: string; // 頭獎…普獎
+  cond: string; // 顯示用中獎條件，如 "5 主 + 第二區"
+  reached: boolean;
+  combos: TierCombo[];
+}
+export interface TierAttribution {
+  period: string;
+  date: string;
+  actual: number[];
+  special: number | null;
+  pick: number;
+  specialLabel: string | null; // 第二區 / 特別號 / null
+  specialPredicted: number | null;
+  specialMethod: string | null;
+  specialHit: boolean;
+  windows: number[];
+  tiers: TierRow[]; // 頭獎→最小
+  bestTierKey: string | null;
+}
+
+interface TierDef { key: string; label: string; main: number; special: "yes" | "no" | "any" | "na"; }
+
+// 各彩種正式獎項階梯（依官方，2026-07 查證）。
+function prizeLadder(g: GameConfig): { defs: TierDef[]; specialLabel: string | null } {
+  if (g.second) {
+    // 威力彩：第一區 6/38 + 第二區 1/8
+    return {
+      specialLabel: "第二區",
+      defs: [
+        { key: "t1", label: "頭獎", main: 6, special: "yes" },
+        { key: "t2", label: "貳獎", main: 6, special: "no" },
+        { key: "t3", label: "參獎", main: 5, special: "yes" },
+        { key: "t4", label: "肆獎", main: 5, special: "no" },
+        { key: "t5", label: "伍獎", main: 4, special: "yes" },
+        { key: "t6", label: "陸獎", main: 4, special: "no" },
+        { key: "t7", label: "柒獎", main: 3, special: "yes" },
+        { key: "t8", label: "捌獎", main: 3, special: "no" },
+        { key: "t9", label: "玖獎", main: 2, special: "yes" },
+        { key: "t10", label: "普獎", main: 1, special: "yes" },
+      ],
+    };
+  }
+  if (g.hasSpecial) {
+    // 大樂透：6/49 + 特別號
+    return {
+      specialLabel: "特別號",
+      defs: [
+        { key: "t1", label: "頭獎", main: 6, special: "any" },
+        { key: "t2", label: "貳獎", main: 5, special: "yes" },
+        { key: "t3", label: "參獎", main: 5, special: "no" },
+        { key: "t4", label: "肆獎", main: 4, special: "yes" },
+        { key: "t5", label: "伍獎", main: 4, special: "no" },
+        { key: "t6", label: "陸獎", main: 3, special: "yes" },
+        { key: "t7", label: "柒獎", main: 2, special: "yes" },
+        { key: "t8", label: "普獎", main: 3, special: "no" },
+      ],
+    };
+  }
+  // 今彩539：5/39，無特別號
+  return {
+    specialLabel: null,
+    defs: [
+      { key: "t1", label: "頭獎", main: 5, special: "na" },
+      { key: "t2", label: "貳獎", main: 4, special: "na" },
+      { key: "t3", label: "參獎", main: 3, special: "na" },
+      { key: "t4", label: "肆獎", main: 2, special: "na" },
+    ],
+  };
+}
+
+function tierCondText(d: TierDef, specialLabel: string | null): string {
+  const base = `${d.main} 主`;
+  if (d.special === "yes") return `${base} + ${specialLabel}`;
+  if (d.special === "no") return `${base}（不含${specialLabel}）`;
+  return base;
+}
+
+// 判斷 (主命中 m, 特別/第二區是否命中 s) 屬於哪一獎項
+function matchTier(defs: TierDef[], m: number, s: boolean): TierDef | null {
+  for (const d of defs) {
+    if (d.main !== m) continue;
+    if (d.special === "any" || d.special === "na") return d;
+    if (d.special === "yes" && s) return d;
+    if (d.special === "no" && !s) return d;
+  }
+  return null;
+}
+
+// 預測特別號/第二區（best-effort 熱門法），回開獎前資料下的候選
+function predictSpecial(history: History, g: GameConfig): { predicted: number | null; method: string | null } {
+  const W = Math.min(50, history.length);
+  const recent = history.slice(-W);
+  if (g.second) {
+    const cnt = new Map<number, number>();
+    for (const d of recent) if (d.special != null) cnt.set(d.special, (cnt.get(d.special) ?? 0) + 1);
+    let best: number | null = null;
+    let bc = -1;
+    for (const [n, c] of cnt) if (c > bc) { bc = c; best = n; }
+    return { predicted: best, method: "第二區近50期最熱" };
+  }
+  if (g.hasSpecial) {
+    const cnt = new Map<number, number>();
+    for (const d of recent) for (const n of d.numbers) cnt.set(n, (cnt.get(n) ?? 0) + 1);
+    let best: number | null = null;
+    let bc = -1;
+    for (const [n, c] of cnt) if (c > bc) { bc = c; best = n; }
+    return { predicted: best, method: "近50期最熱號" };
+  }
+  return { predicted: null, method: null };
+}
+
+export function tierAttributionForLatest(
+  history: History,
+  g: GameConfig,
+  opts: { windows?: number[] } = {}
+): TierAttribution | null {
+  if (history.length < 15) return null;
+  const t = history.length - 1;
+  const hist = history.slice(0, t);
+  const draw = history[t];
+  const actual = new Set(draw.numbers);
+  const windows = (opts.windows ?? [10, 20, 30, 50, 80, 120]).filter((w) => w < hist.length);
+  if (windows.length === 0) return null;
+  const hitsOf = (picks: number[]) => picks.filter((n) => actual.has(n)).length;
+
+  // 所有抓法 × 參數組合的主區命中
+  const combos: TierCombo[] = [];
+  const windowed: { method: string; label: string; fn: (w: number) => number[] }[] = [
+    { method: "score", label: "AI 綜合評分", fn: (w) => pickByScore(hist, g, w) },
+    { method: "hot", label: "冷熱號", fn: (w) => pickByHot(hist, g, w) },
+    { method: "tail", label: "尾數", fn: (w) => pickByTail(hist, g, w) },
+    { method: "zone", label: "區間", fn: (w) => pickByZone(hist, g, w) },
+  ];
+  for (const m of windowed) {
+    for (const w of windows) combos.push({ method: m.method, label: m.label, window: w, mainHits: hitsOf(m.fn(w)) });
+  }
+  combos.push({ method: "omission", label: "遺漏回補", window: 0, mainHits: hitsOf(pickByOmission(hist, g)) });
+
+  // 特別號/第二區預測
+  const sp = predictSpecial(hist, g);
+  const specialHit = sp.predicted != null && draw.special != null && sp.predicted === draw.special;
+
+  // 對應獎項
+  const { defs, specialLabel } = prizeLadder(g);
+  const tiers: TierRow[] = defs.map((d) => {
+    const inTier = combos.filter((c) => matchTier(defs, c.mainHits, specialHit)?.key === d.key);
+    inTier.sort((a, b) => b.mainHits - a.mainHits || a.window - b.window);
+    return { key: d.key, label: d.label, cond: tierCondText(d, specialLabel), reached: inTier.length > 0, combos: inTier };
+  });
+  const bestTierKey = tiers.find((t2) => t2.reached)?.key ?? null;
+
+  return {
+    period: draw.period,
+    date: draw.date,
+    actual: draw.numbers,
+    special: draw.special ?? null,
+    pick: g.pick,
+    specialLabel,
+    specialPredicted: sp.predicted,
+    specialMethod: sp.method,
+    specialHit,
+    windows,
+    tiers,
+    bestTierKey,
+  };
+}
+
 export function backtest(history: History, g: GameConfig, opts: { k?: number; window?: number } = {}): {
   evaluated: number;
   pick: number;

@@ -21,7 +21,7 @@ export interface PublicBundle {
   window: number;
   latest: AnalysisBundle["latest"];
   lastHit: AnalysisBundle["lastHit"];
-  reverseAttribution: AnalysisBundle["reverseAttribution"];
+  tierAttribution: AnalysisBundle["tierAttribution"];
   recent: AnalysisBundle["recent"];
   // 免費指標 (完整)
   hotCold: AnalysisBundle["hotCold"];
@@ -68,7 +68,7 @@ export function publicize(full: AnalysisBundle): PublicBundle {
     window: full.window,
     latest: full.latest,
     lastHit: full.lastHit,
-    reverseAttribution: full.reverseAttribution,
+    tierAttribution: full.tierAttribution,
     recent: full.recent,
     hotCold: full.hotCold,
     omission: full.omission,
