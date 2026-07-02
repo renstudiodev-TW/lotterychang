@@ -19,6 +19,22 @@ const ROOT = path.resolve(__dirname, "..");
 const RAW_DIR = path.join(ROOT, "data", "raw");
 const FULL_DIR = path.join(ROOT, "data", "full"); // 完整分析 (私有，未來認證 API 用)
 const OUT_DIR = path.join(ROOT, "public", "data"); // 公開遮罩版 (前端)
+const PICKS_LOG = path.join(FULL_DIR, "picks-log.json"); // 已發布精選號歷史 (近日去重用)
+
+const RECENCY_LOOKBACK = 3; // 去重回看期數
+const PICKS_LOG_KEEP = 60; // 每個遊戲保留幾筆
+
+type PicksLogEntry = { period: string; pick: number[] };
+type PicksLog = Record<string, PicksLogEntry[]>;
+
+async function loadPicksLog(): Promise<PicksLog> {
+  if (!existsSync(PICKS_LOG)) return {};
+  try {
+    return JSON.parse(await readFile(PICKS_LOG, "utf8")) as PicksLog;
+  } catch {
+    return {};
+  }
+}
 
 function parseMonth(s: string | undefined, fallback: { year: number; month: number }) {
   if (!s) return fallback;
@@ -58,6 +74,7 @@ async function run() {
   const targets: GameId[] = args.length ? args : ["daily539"];
 
   const index: { game: string; name: string; totalDraws: number; latest: string | null }[] = [];
+  const picksLog = await loadPicksLog();
 
   for (const id of targets) {
     const g = GAMES[id];
@@ -89,8 +106,19 @@ async function run() {
 
     await writeFile(path.join(RAW_DIR, `${id}.json`), JSON.stringify(merged), "utf8");
 
-    const bundle = analyze(merged, g, { generatedAt });
+    // 近日去重：取本期之前最近幾期「已發布的精選號」，最新在前，餵進分析軟扣分。
+    const latestPeriod = merged[merged.length - 1].period;
+    const history = (picksLog[id] ?? []).filter((e) => e.period < latestPeriod);
+    const recentPicks = history.slice(-RECENCY_LOOKBACK).reverse().map((e) => e.pick);
+
+    const bundle = analyze(merged, g, { generatedAt, recentPicks });
     await writeFile(path.join(FULL_DIR, `${id}.json`), JSON.stringify(bundle), "utf8");
+
+    // 記錄本期實際發布的精選（top-pick），供之後幾期去重比對。
+    const publishedPick = bundle.score.slice(0, g.pick).map((s) => s.n);
+    const updated = (picksLog[id] ?? []).filter((e) => e.period !== latestPeriod);
+    updated.push({ period: latestPeriod, pick: publishedPick });
+    picksLog[id] = updated.slice(-PICKS_LOG_KEEP);
     // 前端只拿遮罩過的公開版 (高評分號碼不外送)
     const pub = publicize(bundle);
     await writeFile(path.join(OUT_DIR, `${id}.json`), JSON.stringify(pub), "utf8");
@@ -116,6 +144,8 @@ async function run() {
   const byGame = new Map(prevGames.map((i) => [i.game, i]));
   for (const i of index) byGame.set(i.game, i);
   await writeFile(indexPath, JSON.stringify({ games: [...byGame.values()], generatedAt }, null, 2), "utf8");
+
+  await writeFile(PICKS_LOG, JSON.stringify(picksLog, null, 2), "utf8");
 
   console.log("全部完成。");
 }

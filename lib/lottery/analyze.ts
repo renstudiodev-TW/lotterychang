@@ -85,7 +85,7 @@ function sumHistogram(patterns: PatternStat[]): { bucket: string; count: number 
 export function analyze(
   history: History,
   g: GameConfig,
-  opts: { window?: number; zoneSize?: number; generatedAt: string }
+  opts: { window?: number; zoneSize?: number; generatedAt: string; recentPicks?: number[][] }
 ): AnalysisBundle {
   const window = opts.window ?? 50;
   const zoneSize = opts.zoneSize ?? 10;
@@ -102,7 +102,9 @@ export function analyze(
   const drags: DragResult[] = [];
   for (let n = 1; n <= g.pool; n++) drags.push(dragFor(history, g, n, 6));
 
-  const score = comboScore(history, g, { window, zoneSize });
+  // 評分用較短視窗（SCORE_WINDOW）+ 近日去重，讓每日精選更靈敏、不連日重複；
+  // 圖表指標（hotCold/tail/zone）維持 window 期不變。
+  const score = comboScore(history, g, { zoneSize, recentPicks: opts.recentPicks });
   const recommendations = score.slice(0, g.pick * 2).map((s) => s.n).sort((a, b) => a - b);
 
   // 上一期戰績：用開獎「前」的資料(history[:-1])算 AI 精選，比對最新一期實際開獎。
@@ -110,7 +112,7 @@ export function analyze(
   const latestDraw = history[history.length - 1];
   if (latestDraw && history.length > window + 1) {
     const prior = history.slice(0, -1);
-    const predicted = comboScore(prior, g, { window, zoneSize })
+    const predicted = comboScore(prior, g, { zoneSize, recentPicks: opts.recentPicks })
       .slice(0, g.pick)
       .map((s) => s.n)
       .sort((a, b) => a - b);

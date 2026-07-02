@@ -27,13 +27,23 @@ export interface ScoreWeights {
   drag: number;
 }
 
+// 權重與視窗經回測調校（scripts/sweep-recency.ts）：目標連日重疊 ~2（每天換 3-4 個號，
+// 保留 2-3 個強號延續）。避免舊版太黏（重疊 ~3-5）或重手版太亂（重疊 ~0.5）。
 export const DEFAULT_WEIGHTS: ScoreWeights = {
-  hot: 0.25,
-  omission: 0.25,
-  tail: 0.2,
-  zone: 0.15,
-  drag: 0.15,
+  hot: 0.235,
+  omission: 0.235,
+  tail: 0.188,
+  zone: 0.142,
+  drag: 0.2,
 };
+
+// 評分視窗：熱度/尾數/區間的滾動期數。縮短 → 新開獎影響變大 → 每日精選更靈敏。
+export const SCORE_WINDOW = 40;
+
+// 近日去重：對「最近幾期已發布的精選號」做衰減式軟扣分，強制每日輪替，
+// 但真正拉開差距的強號扣完仍在（不硬排除，top-N 永遠填得滿）。
+export const RECENCY_DECAY = [1.0, 0.6, 0.3]; // 昨 / 前 / 大前
+export const RECENCY_STRENGTH = 6; // 0-100 分制下每一「衰減單位」的扣分
 
 function normalize(vals: number[]): number[] {
   const min = Math.min(...vals);
@@ -45,9 +55,15 @@ function normalize(vals: number[]): number[] {
 export function comboScore(
   history: History,
   g: GameConfig,
-  opts: { window?: number; zoneSize?: number; weights?: ScoreWeights } = {}
+  opts: {
+    window?: number;
+    zoneSize?: number;
+    weights?: ScoreWeights;
+    /** 最近幾期「已發布的精選號」，最新在前。用於近日去重軟扣分。 */
+    recentPicks?: number[][];
+  } = {}
 ): ScoreItem[] {
-  const w = opts.window ?? 50;
+  const w = opts.window ?? SCORE_WINDOW;
   const zoneSize = opts.zoneSize ?? 10;
   const weights = opts.weights ?? DEFAULT_WEIGHTS;
 
@@ -103,6 +119,21 @@ export function comboScore(
       weights.drag * dragN[i];
     items.push({ n: i + 1, score: +(score * 100).toFixed(1), parts });
   }
+
+  // 近日去重：對最近 RECENCY_DECAY.length 期已發布的精選號做衰減式軟扣分。
+  const recent = opts.recentPicks;
+  if (recent && recent.length) {
+    const penalty = new Map<number, number>();
+    recent.slice(0, RECENCY_DECAY.length).forEach((picks, idx) => {
+      const decay = RECENCY_DECAY[idx] ?? 0;
+      for (const n of picks) penalty.set(n, (penalty.get(n) ?? 0) + decay);
+    });
+    for (const it of items) {
+      const p = penalty.get(it.n);
+      if (p) it.score = +Math.max(0, it.score - RECENCY_STRENGTH * p).toFixed(1);
+    }
+  }
+
   items.sort((a, b) => b.score - a.score);
   return items;
 }
