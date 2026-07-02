@@ -45,6 +45,33 @@ export const SCORE_WINDOW = 40;
 export const RECENCY_DECAY = [1.0, 0.6, 0.3]; // 昨 / 前 / 大前
 export const RECENCY_STRENGTH = 6; // 0-100 分制下每一「衰減單位」的扣分
 
+// 強制輪替：同一號最多連席幾期，達上限就輪休一期（軟扣分之上的硬保證，
+// 避免真正強的號一直霸榜；輪休後連席歸零，隔期可再回來）。
+export const MAX_CONSEC_STREAK = 3;
+
+/** 算出本期該「輪休」的號：在最近 cap 期已發布精選中連續出現達 cap 次者。 */
+export function restingNumbers(recentPicksNewestFirst: number[][], cap = MAX_CONSEC_STREAK): Set<number> {
+  const rest = new Set<number>();
+  if (recentPicksNewestFirst.length < cap) return rest;
+  for (const n of recentPicksNewestFirst[0] ?? []) {
+    let streak = 0;
+    for (const picks of recentPicksNewestFirst) {
+      if (picks.includes(n)) streak++;
+      else break;
+    }
+    if (streak >= cap) rest.add(n);
+  }
+  return rest;
+}
+
+/** 把輪休號移到排序末端，確保 top-pick 不含它們（硬保證輪替）。 */
+export function applyRestCap(items: ScoreItem[], rest: Set<number>): ScoreItem[] {
+  if (!rest.size) return items;
+  const allowed = items.filter((it) => !rest.has(it.n));
+  const rested = items.filter((it) => rest.has(it.n));
+  return [...allowed, ...rested];
+}
+
 function normalize(vals: number[]): number[] {
   const min = Math.min(...vals);
   const max = Math.max(...vals);

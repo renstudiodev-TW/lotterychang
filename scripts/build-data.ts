@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { GAMES } from "../lib/lottery/games";
 import { fetchHistory } from "../lib/lottery/fetch";
 import { analyze } from "../lib/lottery/analyze";
+import { restingNumbers } from "../lib/lottery/score";
 import { publicize } from "../lib/lottery/publicize";
 import type { Draw, GameId } from "../lib/lottery/types";
 
@@ -110,8 +111,10 @@ async function run() {
     const latestPeriod = merged[merged.length - 1].period;
     const history = (picksLog[id] ?? []).filter((e) => e.period < latestPeriod);
     const recentPicks = history.slice(-RECENCY_LOOKBACK).reverse().map((e) => e.pick);
+    // 強制輪替：連席達上限的號本期輪休。
+    const restNumbers = [...restingNumbers(recentPicks)];
 
-    const bundle = analyze(merged, g, { generatedAt, recentPicks });
+    const bundle = analyze(merged, g, { generatedAt, recentPicks, restNumbers });
     await writeFile(path.join(FULL_DIR, `${id}.json`), JSON.stringify(bundle), "utf8");
 
     // 記錄本期實際發布的精選（top-pick），供之後幾期去重比對。

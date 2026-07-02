@@ -7,7 +7,7 @@ import {
   type HotColdItem, type OmissionItem, type TailItem, type ZoneItem,
   type ZodiacItem, type DragResult, type PatternStat, type SecondAreaItem,
 } from "./indicators";
-import { comboScore, type ScoreItem } from "./score";
+import { comboScore, applyRestCap, type ScoreItem } from "./score";
 import { backtest, tierAttributionForLatest, type MethodResult, type TierAttribution } from "./backtest";
 
 /** 上一期戰績：用「開獎前的資料」算出的 AI 精選，對比該期實際開獎的命中。 */
@@ -85,7 +85,13 @@ function sumHistogram(patterns: PatternStat[]): { bucket: string; count: number 
 export function analyze(
   history: History,
   g: GameConfig,
-  opts: { window?: number; zoneSize?: number; generatedAt: string; recentPicks?: number[][] }
+  opts: {
+    window?: number;
+    zoneSize?: number;
+    generatedAt: string;
+    recentPicks?: number[][];
+    restNumbers?: number[];
+  }
 ): AnalysisBundle {
   const window = opts.window ?? 50;
   const zoneSize = opts.zoneSize ?? 10;
@@ -104,7 +110,9 @@ export function analyze(
 
   // 評分用較短視窗（SCORE_WINDOW）+ 近日去重，讓每日精選更靈敏、不連日重複；
   // 圖表指標（hotCold/tail/zone）維持 window 期不變。
-  const score = comboScore(history, g, { zoneSize, recentPicks: opts.recentPicks });
+  // restNumbers：連席達上限、本期強制輪休的號，移到排序末端 → top-pick 不含它們。
+  const rest = new Set(opts.restNumbers ?? []);
+  const score = applyRestCap(comboScore(history, g, { zoneSize, recentPicks: opts.recentPicks }), rest);
   const recommendations = score.slice(0, g.pick * 2).map((s) => s.n).sort((a, b) => a - b);
 
   // 上一期戰績：用開獎「前」的資料(history[:-1])算 AI 精選，比對最新一期實際開獎。
@@ -112,7 +120,7 @@ export function analyze(
   const latestDraw = history[history.length - 1];
   if (latestDraw && history.length > window + 1) {
     const prior = history.slice(0, -1);
-    const predicted = comboScore(prior, g, { zoneSize, recentPicks: opts.recentPicks })
+    const predicted = applyRestCap(comboScore(prior, g, { zoneSize, recentPicks: opts.recentPicks }), rest)
       .slice(0, g.pick)
       .map((s) => s.n)
       .sort((a, b) => a - b);
